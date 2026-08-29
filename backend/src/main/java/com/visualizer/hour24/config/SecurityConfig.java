@@ -36,8 +36,9 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/health", "/api/auth/**").permitAll()
+                .requestMatchers("/api/health", "/api/auth/**", "/h2-console/**").permitAll()
                 .anyRequest().authenticated()
             );
 
