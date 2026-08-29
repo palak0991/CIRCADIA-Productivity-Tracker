@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChevronLeft, ChevronRight, Calendar, Plus, Globe } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar, Plus, Globe, Clock, AlignVerticalSpaceAround, LayoutDashboard } from 'lucide-react';
 
 const TIMEZONES = [
   { value: 'UTC', label: 'UTC (Coordinated Universal Time)' },
@@ -14,7 +14,9 @@ const DateHeader = ({
   onDateChange,
   timezone,
   onTimezoneChange,
-  onAddNewTask
+  onAddNewTask,
+  viewMode = 'split',
+  onViewModeChange
 }) => {
 
   const formatDateString = (dStr) => {
@@ -77,6 +79,34 @@ const DateHeader = ({
       </div>
 
       <div className="header-right-actions">
+        {/* View Mode Toggle */}
+        <div className="view-mode-toggle btn-group">
+          <button
+            onClick={() => onViewModeChange && onViewModeChange('split')}
+            className={`btn btn-sm ${viewMode === 'split' ? 'btn-primary' : 'btn-secondary'}`}
+            title="Split: Timeline + 24H Clock"
+          >
+            <LayoutDashboard className="w-4 h-4" />
+            <span className="view-mode-text">Split</span>
+          </button>
+          <button
+            onClick={() => onViewModeChange && onViewModeChange('clock')}
+            className={`btn btn-sm ${viewMode === 'clock' ? 'btn-primary' : 'btn-secondary'}`}
+            title="24-Hour Circular Clock Dial"
+          >
+            <Clock className="w-4 h-4" />
+            <span className="view-mode-text">Clock Dial</span>
+          </button>
+          <button
+            onClick={() => onViewModeChange && onViewModeChange('timeline')}
+            className={`btn btn-sm ${viewMode === 'timeline' ? 'btn-primary' : 'btn-secondary'}`}
+            title="24-Hour Linear Timeline"
+          >
+            <AlignVerticalSpaceAround className="w-4 h-4" />
+            <span className="view-mode-text">Timeline</span>
+          </button>
+        </div>
+
         <div className="timezone-select-wrapper">
           <Globe className="w-4 h-4 text-muted" />
           <select

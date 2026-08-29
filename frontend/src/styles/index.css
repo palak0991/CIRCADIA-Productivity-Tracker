@@ -732,3 +732,193 @@ body {
   min-width: 0;
   transition: width 0.6s ease;
 }
+
+/* ─── View Mode Switcher ─────────────────────────────────────────────────── */
+.view-mode-toggle {
+  display: flex;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-md);
+  padding: 2px;
+}
+.view-mode-toggle .btn {
+  border-radius: var(--radius-sm);
+  padding: 0.35rem 0.65rem;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.view-mode-text {
+  display: inline;
+}
+@media (max-width: 640px) {
+  .view-mode-text { display: none; }
+}
+
+.dashboard-view--clock {
+  grid-template-columns: 1fr;
+  max-width: 760px;
+  margin: 0 auto;
+}
+.dashboard-view--timeline {
+  grid-template-columns: 1fr;
+}
+
+/* ─── 24-Hour Circular Clock Dial ────────────────────────────────────────── */
+.clock24-container {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  overflow: hidden;
+}
+
+.clock24-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border-glass);
+  padding-bottom: 0.6rem;
+}
+
+.clock24-title {
+  font-family: var(--font-heading);
+  font-size: 0.95rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.clock24-title-icon { font-size: 1.05rem; }
+.clock24-sub { font-size: 0.72rem; color: var(--text-muted); }
+
+.clock24-svg-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 320px;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.clock24-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  filter: drop-shadow(0 4px 20px rgba(0, 0, 0, 0.4));
+}
+
+.clock24-hour-label {
+  font-family: var(--font-heading);
+  user-select: none;
+}
+
+/* Center Hub Overlay */
+.clock24-center-content {
+  position: absolute;
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  pointer-events: auto;
+  z-index: 10;
+}
+
+.clock24-default-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.clock24-center-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--text-subtle);
+  letter-spacing: 0.5px;
+}
+
+.clock24-live-time {
+  font-family: var(--font-heading);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #F8FAFC;
+  line-height: 1;
+}
+
+.clock24-center-count {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}
+
+.clock24-hover-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  width: 100%;
+  cursor: pointer;
+}
+
+.clock24-hover-cat-badge {
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: #FFF;
+  padding: 1px 6px;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-bottom: 2px;
+}
+
+.clock24-hover-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #FFF;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 110px;
+  line-height: 1.2;
+}
+
+.clock24-hover-time {
+  font-size: 0.72rem;
+  color: #94A3B8;
+  font-weight: 600;
+}
+
+.clock24-hover-hint {
+  font-size: 0.62rem;
+  color: var(--primary);
+  margin-top: 1px;
+}
+
+/* Cardinal / Compass Labels */
+.clock24-cardinals {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  padding-top: 0.4rem;
+  border-top: 1px solid rgba(255,255,255,0.04);
+}
+
+.cardinal-item {
+  font-size: 0.68rem;
+  color: var(--text-subtle);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.cardinal-icon { font-size: 0.75rem; }
+
