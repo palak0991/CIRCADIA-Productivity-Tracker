@@ -1,0 +1,30 @@
+# Operating System & IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.iml
+
+# Node / Frontend
+node_modules/
+dist/
+dist-ssr/
+*.local
+.env
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Java / Maven Backend
+target/
+*.class
+*.jar
+*.war
+.mvn/
+mvnw
+mvnw.cmd
+
+# Logs & Environment
+*.log
+.env
