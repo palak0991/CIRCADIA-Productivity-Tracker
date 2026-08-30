@@ -74,6 +74,15 @@ public class TaskController {
         return ResponseEntity.ok(updated);
     }
 
+    @PatchMapping("/{id}/actual-time")
+    public ResponseEntity<TaskResponse> updateActualTime(@PathVariable("id") Long id,
+                                                         @Valid @RequestBody com.visualizer.hour24.dto.request.ActualTimeActionRequest request,
+                                                         @RequestHeader(value = "X-User-Id", required = false) Long userIdHeader) {
+        Long userId = userIdHeader != null ? userIdHeader : securityUtils.getCurrentUserId();
+        TaskResponse updated = taskService.updateActualTime(userId, id, request);
+        return ResponseEntity.ok(updated);
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTask(@PathVariable("id") Long id,
                                             @RequestHeader(value = "X-User-Id", required = false) Long userIdHeader) {

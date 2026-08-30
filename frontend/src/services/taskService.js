@@ -22,6 +22,14 @@ export const updateTaskStatus = async (id, statusData) => {
   return response.data;
 };
 
+export const updateActualTime = async (id, action, customTimestamp = null) => {
+  const response = await api.patch(`/tasks/${id}/actual-time`, {
+    action,
+    customTimestamp
+  });
+  return response.data;
+};
+
 export const deleteTask = async (id) => {
   await api.delete(`/tasks/${id}`);
 };

@@ -922,3 +922,178 @@ body {
 }
 .cardinal-icon { font-size: 0.75rem; }
 
+/* ─── Task Quick Actions & Actual Duration Badges ────────────────────────── */
+.task-quick-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-left: auto;
+}
+
+.btn-quick-action {
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--radius-sm);
+  padding: 2px 7px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-quick-start {
+  background: rgba(99, 102, 241, 0.25);
+  color: #818CF8;
+  border-color: rgba(99, 102, 241, 0.5);
+}
+.btn-quick-start:hover {
+  background: #6366F1;
+  color: #FFF;
+}
+
+.btn-quick-complete {
+  background: rgba(16, 185, 129, 0.25);
+  color: #34D399;
+  border-color: rgba(16, 185, 129, 0.5);
+}
+.btn-quick-complete:hover {
+  background: #10B981;
+  color: #FFF;
+}
+
+.task-actual-duration-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border-glass);
+}
+.text-danger { color: #F87171 !important; }
+.text-success { color: #34D399 !important; }
+
+.task-block.overrunning {
+  box-shadow: 0 0 14px 2px rgba(244, 63, 94, 0.4);
+  border-right: 3px solid #F43F5E;
+}
+
+/* ─── Category Planned vs Actual Comparison Dual Tracks ──────────────────── */
+.cat-bar-card {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-md);
+  padding: 0.6rem 0.75rem;
+  margin-bottom: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.cat-bar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.cat-bar-name-group {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.cat-bar-metrics {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+.cat-plan-metric { color: var(--text-muted); }
+
+.cat-bar-dual-tracks {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.cat-track-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.track-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--text-subtle);
+  width: 10px;
+}
+.track-bg {
+  flex: 1;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.track-fill {
+  height: 100%;
+  border-radius: 3px;
+  min-width: 3px;
+  transition: width 0.6s ease;
+}
+.track-overrun {
+  animation: pulse-overrun 1.5s infinite;
+}
+@keyframes pulse-overrun {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* ─── Modal Actual Time Controls ─────────────────────────────────────────── */
+.form-section-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-subtle);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 0.25rem;
+}
+
+.actual-time-section {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: var(--radius-md);
+  padding: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.actual-time-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.badge-overrun {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(244, 63, 94, 0.2);
+  color: #F87171;
+  border: 1px solid rgba(244, 63, 94, 0.4);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.actual-time-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+

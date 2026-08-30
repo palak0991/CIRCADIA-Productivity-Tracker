@@ -21,6 +21,9 @@ public class TaskResponse {
     private Instant actualStartDateTime;
     private Instant actualEndDateTime;
     private TaskStatus status;
+    private Long plannedDurationMinutes;
+    private Long actualDurationMinutes;
+    private Boolean isOverrunning;
     private Instant createdAt;
     private Instant updatedAt;
 }

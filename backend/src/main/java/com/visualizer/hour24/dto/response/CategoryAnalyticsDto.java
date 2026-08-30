@@ -13,5 +13,6 @@ public class CategoryAnalyticsDto {
     private String color;
     private long plannedMinutes;
     private long completedMinutes;
+    private long actualMinutes;
     private int taskCount;
 }

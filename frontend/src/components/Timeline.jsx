@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, CheckCircle, AlertTriangle, XCircle, PlayCircle, Calendar } from 'lucide-react';
+import { Clock, CheckCircle, AlertTriangle, XCircle, PlayCircle, Calendar, Play, Check, Flame } from 'lucide-react';
 
 const STATUS_CONFIG = {
   PLANNED: { label: 'Planned', bg: 'rgba(59, 130, 246, 0.2)', text: '#60A5FA', border: '#3B82F6', icon: Calendar },
-  IN_PROGRESS: { label: 'In Progress', bg: 'rgba(245, 158, 11, 0.2)', text: '#FBBF24', border: '#F59E0B', icon: PlayCircle },
+  IN_PROGRESS: { label: 'In Progress', bg: 'rgba(245, 158, 11, 0.25)', text: '#FBBF24', border: '#F59E0B', icon: PlayCircle },
   COMPLETED: { label: 'Completed', bg: 'rgba(16, 185, 129, 0.2)', text: '#34D399', border: '#10B981', icon: CheckCircle },
   MISSED: { label: 'Missed', bg: 'rgba(239, 68, 68, 0.2)', text: '#F87171', border: '#EF4444', icon: AlertTriangle },
   CANCELLED: { label: 'Cancelled', bg: 'rgba(107, 114, 128, 0.2)', text: '#9CA3AF', border: '#6B7280', icon: XCircle }
 };
 
-const Timeline = ({ selectedDate, tasks, onEditTask, onStatusChange }) => {
+const Timeline = ({ selectedDate, tasks, onEditTask, onStatusChange, onActualTimeAction }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
 
   // Update current time indicator every 1 second
@@ -93,7 +93,7 @@ const Timeline = ({ selectedDate, tasks, onEditTask, onStatusChange }) => {
             const durationMinutes = (effectiveEnd.getTime() - effectiveStart.getTime()) / 60000;
 
             const topPx = (startOffsetMinutes / 1440) * 1440;
-            const heightPx = Math.max((durationMinutes / 1440) * 1440, 28); // minimum 28px height
+            const heightPx = Math.max((durationMinutes / 1440) * 1440, 32); // minimum 32px height
 
             const statusInfo = STATUS_CONFIG[task.status] || STATUS_CONFIG.PLANNED;
             const StatusIcon = statusInfo.icon;
@@ -102,7 +102,7 @@ const Timeline = ({ selectedDate, tasks, onEditTask, onStatusChange }) => {
             return (
               <div
                 key={task.id}
-                className={`task-block ${task.status.toLowerCase()}`}
+                className={`task-block ${task.status.toLowerCase()} ${task.isOverrunning ? 'overrunning' : ''}`}
                 style={{
                   top: `${topPx}px`,
                   height: `${heightPx}px`,
@@ -127,18 +127,54 @@ const Timeline = ({ selectedDate, tasks, onEditTask, onStatusChange }) => {
                     <StatusIcon className="w-3.5 h-3.5 mr-1" />
                     <span>{statusInfo.label}</span>
                   </div>
+
+                  {/* Planned vs Actual Duration Badge */}
+                  {task.actualDurationMinutes != null && (
+                    <span className={`task-actual-duration-badge ${task.isOverrunning ? 'text-danger' : 'text-success'}`}>
+                      {task.isOverrunning && <Flame className="w-3 h-3 inline mr-0.5" />}
+                      Act: {task.actualDurationMinutes}m
+                    </span>
+                  )}
+
+                  {/* Quick Action Button: Start / Complete */}
+                  {onActualTimeAction && (
+                    <div className="task-quick-actions" onClick={(e) => e.stopPropagation()}>
+                      {task.status === 'PLANNED' && (
+                        <button
+                          type="button"
+                          className="btn-quick-action btn-quick-start"
+                          title="Start Task Now"
+                          onClick={() => onActualTimeAction(task.id, 'START')}
+                        >
+                          <Play className="w-3 h-3 mr-0.5 fill-current" />
+                          <span>Start</span>
+                        </button>
+                      )}
+                      {task.status === 'IN_PROGRESS' && (
+                        <button
+                          type="button"
+                          className="btn-quick-action btn-quick-complete"
+                          title="Complete Task Now"
+                          onClick={() => onActualTimeAction(task.id, 'COMPLETE')}
+                        >
+                          <Check className="w-3 h-3 mr-0.5" />
+                          <span>Done</span>
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 <div className="task-block-body">
                   <h4 className="task-title">{task.title}</h4>
-                  {task.description && heightPx > 45 && (
+                  {task.description && heightPx > 50 && (
                     <p className="task-description">{task.description}</p>
                   )}
                 </div>
 
                 <div className="task-block-footer">
                   <span className="task-time-range">
-                    {formatTime(taskStart)} – {formatTime(taskEnd)} ({Math.round((taskEnd - taskStart) / 60000)}m)
+                    {formatTime(taskStart)} – {formatTime(taskEnd)} (Plan: {task.plannedDurationMinutes || Math.round((taskEnd - taskStart) / 60000)}m)
                   </span>
                 </div>
               </div>

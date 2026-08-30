@@ -5,6 +5,7 @@ import analyticsService from '../services/analyticsService';
    Small helpers
 ────────────────────────────────────────────── */
 function fmt(minutes) {
+  if (!minutes || minutes <= 0) return '0m';
   if (minutes < 60) return `${minutes}m`;
   const h = Math.floor(minutes / 60);
   const m = minutes % 60;
@@ -60,32 +61,51 @@ function StatBadge({ label, value, color }) {
 }
 
 function CategoryBar({ cat, maxMinutes }) {
-  const pct = maxMinutes > 0 ? (cat.plannedMinutes / maxMinutes) * 100 : 0;
-  const completedPct = cat.plannedMinutes > 0
-    ? (cat.completedMinutes / cat.plannedMinutes) * 100
-    : 0;
+  const plannedPct = maxMinutes > 0 ? (cat.plannedMinutes / maxMinutes) * 100 : 0;
+  const actualPct = maxMinutes > 0 ? (cat.actualMinutes / maxMinutes) * 100 : 0;
+  const isOverrun = cat.actualMinutes > cat.plannedMinutes && cat.plannedMinutes > 0;
 
   return (
-    <div className="cat-bar-row">
-      <div className="cat-bar-meta">
-        <span className="cat-dot" style={{ background: cat.color }} />
-        <span className="cat-name">{cat.categoryName}</span>
-        <span className="cat-time">{fmt(cat.plannedMinutes)}</span>
-      </div>
-      <div className="cat-bar-track">
-        {/* Full planned width container */}
-        <div
-          className="cat-bar-planned"
-          style={{ width: `${pct}%`, background: `${cat.color}33` }}
-        >
-          {/* Completed fill */}
-          <div
-            className="cat-bar-completed"
-            style={{ width: `${completedPct}%`, background: cat.color }}
-          />
+    <div className="cat-bar-card">
+      <div className="cat-bar-header">
+        <div className="cat-bar-name-group">
+          <span className="cat-dot" style={{ background: cat.color }} />
+          <span className="cat-name">{cat.categoryName}</span>
+        </div>
+        <div className="cat-bar-metrics">
+          <span className="cat-plan-metric">Plan: {fmt(cat.plannedMinutes)}</span>
+          <span className={`cat-act-metric ${isOverrun ? 'text-danger' : 'text-success'}`}>
+            Act: {fmt(cat.actualMinutes)}
+          </span>
         </div>
       </div>
-      <span className="cat-task-count">{cat.taskCount} task{cat.taskCount !== 1 ? 's' : ''}</span>
+
+      {/* Comparison Bars */}
+      <div className="cat-bar-dual-tracks">
+        {/* Planned Track */}
+        <div className="cat-track-row">
+          <span className="track-label">P</span>
+          <div className="track-bg">
+            <div
+              className="track-fill track-fill-plan"
+              style={{ width: `${plannedPct}%`, backgroundColor: `${cat.color}66` }}
+            />
+          </div>
+        </div>
+        {/* Actual Track */}
+        <div className="cat-track-row">
+          <span className="track-label">A</span>
+          <div className="track-bg">
+            <div
+              className={`track-fill track-fill-act ${isOverrun ? 'track-overrun' : ''}`}
+              style={{
+                width: `${actualPct}%`,
+                backgroundColor: isOverrun ? '#F43F5E' : cat.color
+              }}
+            />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -120,7 +140,7 @@ export default function AnalyticsPanel({ date, timezone, refreshSignal }) {
       <div className="analytics-header" onClick={() => setCollapsed(c => !c)}>
         <h3 className="analytics-title">
           <span className="analytics-title-icon">📊</span>
-          Day Analytics
+          Day Analytics (Plan vs Actual)
         </h3>
         <button className="analytics-collapse-btn" aria-label={collapsed ? 'Expand' : 'Collapse'}>
           {collapsed ? '▲' : '▼'}
@@ -146,17 +166,22 @@ export default function AnalyticsPanel({ date, timezone, refreshSignal }) {
                   <StatBadge label="Missed"    value={data.missedTasks}     color="#ef4444" />
                   <StatBadge label="Planned"   value={data.plannedTasks}    color="#3b82f6" />
                   <StatBadge label="In Prog."  value={data.inProgressTasks} color="#f59e0b" />
-                  <StatBadge label="Planned"   value={fmt(data.totalPlannedMinutes)}   color="#a855f7" />
-                  <StatBadge label="Done"      value={fmt(data.totalCompletedMinutes)} color="#06b6d4" />
+                  <StatBadge label="Plan Time" value={fmt(data.totalPlannedMinutes)} color="#a855f7" />
+                  <StatBadge label="Act Time"  value={fmt(data.totalActualMinutes)}  color="#06b6d4" />
                 </div>
               </div>
 
-              {/* Category breakdown */}
+              {/* Category Planned vs Actual breakdown */}
               {data.categoryBreakdown?.length > 0 && (
                 <div className="analytics-category-section">
-                  <h4 className="analytics-section-title">By Category</h4>
+                  <div className="analytics-section-header">
+                    <h4 className="analytics-section-title">Planned vs Actual by Category</h4>
+                  </div>
                   {(() => {
-                    const maxMin = Math.max(...data.categoryBreakdown.map(c => c.plannedMinutes), 1);
+                    const maxMin = Math.max(
+                      ...data.categoryBreakdown.map(c => Math.max(c.plannedMinutes, c.actualMinutes)),
+                      1
+                    );
                     return data.categoryBreakdown.map(cat => (
                       <CategoryBar key={cat.categoryId} cat={cat} maxMinutes={maxMin} />
                     ));

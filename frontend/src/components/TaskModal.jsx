@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { X, Trash2, Calendar, Clock, Tag, AlignLeft, CheckCircle } from 'lucide-react';
+import { X, Trash2, Calendar, Clock, Tag, AlignLeft, CheckCircle, Play, Check, RotateCcw, Flame } from 'lucide-react';
 
 const TaskModal = ({
   isOpen,
   onClose,
   onSave,
   onDelete,
+  onActualTimeAction,
   taskToEdit,
   categories,
   selectedDate
@@ -15,6 +16,8 @@ const TaskModal = ({
   const [categoryId, setCategoryId] = useState('');
   const [startDateTime, setStartDateTime] = useState('');
   const [endDateTime, setEndDateTime] = useState('');
+  const [actualStartDateTime, setActualStartDateTime] = useState('');
+  const [actualEndDateTime, setActualEndDateTime] = useState('');
   const [status, setStatus] = useState('PLANNED');
   const [error, setError] = useState('');
 
@@ -25,16 +28,19 @@ const TaskModal = ({
       setCategoryId(taskToEdit.category?.id || (categories[0]?.id || ''));
       setStartDateTime(formatToDateTimeLocal(taskToEdit.startDateTime));
       setEndDateTime(formatToDateTimeLocal(taskToEdit.endDateTime));
+      setActualStartDateTime(formatToDateTimeLocal(taskToEdit.actualStartDateTime));
+      setActualEndDateTime(formatToDateTimeLocal(taskToEdit.actualEndDateTime));
       setStatus(taskToEdit.status || 'PLANNED');
     } else {
       setTitle('');
       setDescription('');
       setCategoryId(categories[0]?.id || '');
-      // Default to starting at 09:00 AM on selectedDate, duration 1 hour
       const defaultStart = `${selectedDate}T09:00`;
       const defaultEnd = `${selectedDate}T10:00`;
       setStartDateTime(defaultStart);
       setEndDateTime(defaultEnd);
+      setActualStartDateTime('');
+      setActualEndDateTime('');
       setStatus('PLANNED');
     }
     setError('');
@@ -48,6 +54,16 @@ const TaskModal = ({
     const pad = (num) => String(num).padStart(2, '0');
     return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
   }
+
+  const handleQuickAction = async (action) => {
+    if (!taskToEdit?.id || !onActualTimeAction) return;
+    try {
+      await onActualTimeAction(taskToEdit.id, action);
+      onClose();
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to update actual time');
+    }
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -72,6 +88,9 @@ const TaskModal = ({
       return;
     }
 
+    const actualStartIso = actualStartDateTime ? new Date(actualStartDateTime).toISOString() : null;
+    const actualEndIso = actualEndDateTime ? new Date(actualEndDateTime).toISOString() : null;
+
     onSave({
       id: taskToEdit?.id,
       title,
@@ -79,6 +98,8 @@ const TaskModal = ({
       categoryId: Number(categoryId),
       startDateTime: startIso,
       endDateTime: endIso,
+      actualStartDateTime: actualStartIso,
+      actualEndDateTime: actualEndIso,
       status
     });
   };
@@ -141,6 +162,8 @@ const TaskModal = ({
             </div>
           </div>
 
+          {/* Planned Time Interval */}
+          <div className="form-section-title">Planned Time</div>
           <div className="form-row">
             <div className="form-group">
               <label>Start Date & Time</label>
@@ -165,6 +188,72 @@ const TaskModal = ({
             </div>
           </div>
 
+          {/* Actual Time Tracking Section (for existing tasks) */}
+          {taskToEdit && (
+            <div className="actual-time-section">
+              <div className="actual-time-header">
+                <span className="form-section-title">Actual Execution Tracking</span>
+                {taskToEdit.isOverrunning && (
+                  <span className="badge-overrun">
+                    <Flame className="w-3.5 h-3.5 mr-1" />
+                    Overrunning planned time!
+                  </span>
+                )}
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Actual Start</label>
+                  <input
+                    type="datetime-local"
+                    value={actualStartDateTime}
+                    onChange={(e) => setActualStartDateTime(e.target.value)}
+                    className="form-input"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Actual End</label>
+                  <input
+                    type="datetime-local"
+                    value={actualEndDateTime}
+                    onChange={(e) => setActualEndDateTime(e.target.value)}
+                    className="form-input"
+                  />
+                </div>
+              </div>
+
+              {/* Quick Execution Action Triggers */}
+              <div className="actual-time-actions">
+                <button
+                  type="button"
+                  className="btn btn-sm btn-secondary"
+                  onClick={() => handleQuickAction('START')}
+                >
+                  <Play className="w-3.5 h-3.5 mr-1 text-accent fill-current" />
+                  Stamp Start (Now)
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-sm btn-secondary"
+                  onClick={() => handleQuickAction('COMPLETE')}
+                >
+                  <Check className="w-3.5 h-3.5 mr-1 text-success" />
+                  Stamp Complete (Now)
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-sm btn-secondary"
+                  onClick={() => handleQuickAction('RESET')}
+                  title="Reset actual time stamps"
+                >
+                  <RotateCcw className="w-3.5 h-3.5 mr-1 text-muted" />
+                  Reset
+                </button>
+              </div>
+            </div>
+          )}
+
           <div className="form-group">
             <label>Description (Optional)</label>
             <textarea
@@ -172,7 +261,7 @@ const TaskModal = ({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               className="form-textarea"
-              rows={3}
+              rows={2}
             />
           </div>
 

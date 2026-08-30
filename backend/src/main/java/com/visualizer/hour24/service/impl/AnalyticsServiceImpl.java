@@ -57,6 +57,11 @@ public class AnalyticsServiceImpl implements AnalyticsService {
             .mapToLong(t -> clampedDurationMinutes(t, rangeStart, rangeEnd))
             .sum();
 
+        long totalActualMinutes = tasks.stream()
+            .filter(t -> t.getStatus() != TaskStatus.CANCELLED)
+            .mapToLong(t -> clampedActualDurationMinutes(t, rangeStart, rangeEnd))
+            .sum();
+
         // Productivity score: (completedMinutes / max(plannedMinutes, 1)) * 100, capped at 100
         double productivityScore = totalPlannedMinutes > 0
             ? Math.min(100.0, (totalCompletedMinutes * 100.0) / totalPlannedMinutes)
@@ -78,6 +83,10 @@ public class AnalyticsServiceImpl implements AnalyticsService {
                     .filter(t -> t.getStatus() == TaskStatus.COMPLETED)
                     .mapToLong(t -> clampedDurationMinutes(t, rangeStart, rangeEnd))
                     .sum();
+                long catActualMins = catTasks.stream()
+                    .filter(t -> t.getStatus() != TaskStatus.CANCELLED)
+                    .mapToLong(t -> clampedActualDurationMinutes(t, rangeStart, rangeEnd))
+                    .sum();
 
                 return CategoryAnalyticsDto.builder()
                     .categoryId(entry.getKey())
@@ -85,6 +94,7 @@ public class AnalyticsServiceImpl implements AnalyticsService {
                     .color(representative.getCategory().getColor())
                     .plannedMinutes(catPlannedMins)
                     .completedMinutes(catCompletedMins)
+                    .actualMinutes(catActualMins)
                     .taskCount(catTasks.size())
                     .build();
             })
@@ -101,6 +111,7 @@ public class AnalyticsServiceImpl implements AnalyticsService {
             .inProgressTasks((int) inProgress)
             .totalPlannedMinutes(totalPlannedMinutes)
             .totalCompletedMinutes(totalCompletedMinutes)
+            .totalActualMinutes(totalActualMinutes)
             .productivityScore(Math.round(productivityScore * 10.0) / 10.0)
             .categoryBreakdown(categoryBreakdown)
             .build();
@@ -127,6 +138,19 @@ public class AnalyticsServiceImpl implements AnalyticsService {
     private long clampedDurationMinutes(Task task, Instant rangeStart, Instant rangeEnd) {
         Instant effectiveStart = task.getStartDateTime().isBefore(rangeStart) ? rangeStart : task.getStartDateTime();
         Instant effectiveEnd = task.getEndDateTime().isAfter(rangeEnd) ? rangeEnd : task.getEndDateTime();
+        return Math.max(0, ChronoUnit.MINUTES.between(effectiveStart, effectiveEnd));
+    }
+
+    private long clampedActualDurationMinutes(Task task, Instant rangeStart, Instant rangeEnd) {
+        if (task.getActualStartDateTime() == null) {
+            return 0;
+        }
+        Instant effectiveStart = task.getActualStartDateTime().isBefore(rangeStart) ? rangeStart : task.getActualStartDateTime();
+        Instant rawEnd = task.getActualEndDateTime() != null ? task.getActualEndDateTime() : Instant.now();
+        Instant effectiveEnd = rawEnd.isAfter(rangeEnd) ? rangeEnd : rawEnd;
+        if (effectiveEnd.isBefore(effectiveStart)) {
+            return 0;
+        }
         return Math.max(0, ChronoUnit.MINUTES.between(effectiveStart, effectiveEnd));
     }
 }

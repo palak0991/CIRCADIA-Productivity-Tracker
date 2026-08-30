@@ -1,5 +1,6 @@
 package com.visualizer.hour24.service.impl;
 
+import com.visualizer.hour24.dto.request.ActualTimeActionRequest;
 import com.visualizer.hour24.dto.request.TaskRequest;
 import com.visualizer.hour24.dto.request.TaskStatusUpdateRequest;
 import com.visualizer.hour24.dto.response.TaskResponse;
@@ -133,6 +134,35 @@ public class TaskServiceImpl implements TaskService {
             }
             if (task.getActualEndDateTime() == null) {
                 task.setActualEndDateTime(Instant.now());
+            }
+        }
+
+        return taskMapper.toResponse(taskRepository.save(task));
+    }
+
+    @Override
+    public TaskResponse updateActualTime(Long userId, Long taskId, ActualTimeActionRequest request) {
+        Task task = taskRepository.findByIdAndUserId(taskId, userId)
+            .orElseThrow(() -> new ResourceNotFoundException("Task not found with id: " + taskId));
+
+        Instant timestamp = request.getCustomTimestamp() != null ? request.getCustomTimestamp() : Instant.now();
+
+        switch (request.getAction()) {
+            case START -> {
+                task.setActualStartDateTime(timestamp);
+                task.setStatus(TaskStatus.IN_PROGRESS);
+            }
+            case COMPLETE -> {
+                if (task.getActualStartDateTime() == null) {
+                    task.setActualStartDateTime(task.getStartDateTime());
+                }
+                task.setActualEndDateTime(timestamp);
+                task.setStatus(TaskStatus.COMPLETED);
+            }
+            case RESET -> {
+                task.setActualStartDateTime(null);
+                task.setActualEndDateTime(null);
+                task.setStatus(TaskStatus.PLANNED);
             }
         }
 

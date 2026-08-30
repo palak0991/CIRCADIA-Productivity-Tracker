@@ -21,6 +21,7 @@ public class DayAnalyticsResponse {
 
     private long totalPlannedMinutes;
     private long totalCompletedMinutes;
+    private long totalActualMinutes;
 
     // Productivity score 0-100
     private double productivityScore;
