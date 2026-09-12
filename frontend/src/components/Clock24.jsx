@@ -163,11 +163,11 @@ export default function Clock24({ tasks = [], selectedDate, onEditTask, timezone
           className="clock24-svg"
         >
           <defs>
-            {/* Ambient Background Gradient for Day / Night */}
+            {/* Light lavender-to-white background gradient */}
             <radialGradient id="clockBgGrad" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#1E293B" stopOpacity="0.8" />
-              <stop offset="60%" stopColor="#0F172A" stopOpacity="0.95" />
-              <stop offset="100%" stopColor="#0B0F17" stopOpacity="1" />
+              <stop offset="0%" stopColor="#F7F5FF" stopOpacity="1" />
+              <stop offset="60%" stopColor="#EDE9FE" stopOpacity="1" />
+              <stop offset="100%" stopColor="#DDD6FE" stopOpacity="1" />
             </radialGradient>
 
             {/* Glowing filter for active hover */}
@@ -189,23 +189,23 @@ export default function Clock24({ tasks = [], selectedDate, onEditTask, timezone
             cy={center}
             r={outerR}
             fill="url(#clockBgGrad)"
-            stroke="rgba(255, 255, 255, 0.08)"
+            stroke="#C4B5FD"
             strokeWidth="1.5"
           />
 
           {/* Empty Track for 24h Donut */}
           <path
             d={describeDonutArc(center, center, innerR, outerR, 0, 360)}
-            fill="rgba(255, 255, 255, 0.02)"
-            stroke="rgba(255, 255, 255, 0.04)"
+            fill="rgba(196, 181, 253, 0.18)"
+            stroke="rgba(196, 181, 253, 0.35)"
             strokeWidth="1"
           />
 
           {/* 4 Quadrant Divider Lines (00:00, 06:00, 12:00, 18:00) */}
-          <line x1={center} y1={center - outerR} x2={center} y2={center - innerR} stroke="rgba(255,255,255,0.12)" strokeDasharray="2 2" />
-          <line x1={center + innerR} y1={center} x2={center + outerR} y2={center} stroke="rgba(255,255,255,0.12)" strokeDasharray="2 2" />
-          <line x1={center} y1={center + innerR} x2={center} y2={center + outerR} stroke="rgba(255,255,255,0.12)" strokeDasharray="2 2" />
-          <line x1={center - outerR} y1={center} x2={center - innerR} y2={center} stroke="rgba(255,255,255,0.12)" strokeDasharray="2 2" />
+          <line x1={center} y1={center - outerR} x2={center} y2={center - innerR} stroke="#A78BFA" strokeDasharray="3 3" strokeOpacity="0.5" />
+          <line x1={center + innerR} y1={center} x2={center + outerR} y2={center} stroke="#A78BFA" strokeDasharray="3 3" strokeOpacity="0.5" />
+          <line x1={center} y1={center + innerR} x2={center} y2={center + outerR} stroke="#A78BFA" strokeDasharray="3 3" strokeOpacity="0.5" />
+          <line x1={center - outerR} y1={center} x2={center - innerR} y2={center} stroke="#A78BFA" strokeDasharray="3 3" strokeOpacity="0.5" />
 
           {/* Color-Coded Task Donut Arcs */}
           {taskArcs.map(arc => {
@@ -217,9 +217,9 @@ export default function Clock24({ tasks = [], selectedDate, onEditTask, timezone
                 <path
                   d={arc.path}
                   fill={color}
-                  fillOpacity={isHovered ? 0.95 : 0.75}
-                  stroke={isHovered ? '#FFFFFF' : 'rgba(0,0,0,0.3)'}
-                  strokeWidth={isHovered ? 2 : 1}
+                  fillOpacity={isHovered ? 1 : 0.88}
+                  stroke={isHovered ? '#FFFFFF' : 'rgba(255,255,255,0.6)'}
+                  strokeWidth={isHovered ? 2.5 : 1.5}
                   filter={isHovered ? 'url(#glow)' : undefined}
                   style={{
                     cursor: 'pointer',
@@ -243,8 +243,8 @@ export default function Clock24({ tasks = [], selectedDate, onEditTask, timezone
                 y1={t.pInner.y}
                 x2={t.pOuter.x}
                 y2={t.pOuter.y}
-                stroke={t.isMajor ? '#94A3B8' : t.isSemiMajor ? 'rgba(148, 163, 184, 0.6)' : 'rgba(255,255,255,0.15)'}
-                strokeWidth={t.isMajor ? 2 : t.isSemiMajor ? 1.5 : 1}
+                stroke={t.isMajor ? '#6D28D9' : t.isSemiMajor ? '#A78BFA' : '#C4B5FD'}
+                strokeWidth={t.isMajor ? 2 : t.isSemiMajor ? 1.5 : 0.8}
               />
               {(t.isMajor || t.isSemiMajor) && (
                 <text
@@ -254,7 +254,7 @@ export default function Clock24({ tasks = [], selectedDate, onEditTask, timezone
                   dominantBaseline="central"
                   fontSize={t.isMajor ? '8.5' : '7'}
                   fontWeight={t.isMajor ? '700' : '600'}
-                  fill={t.isMajor ? '#F8FAFC' : '#94A3B8'}
+                  fill={t.isMajor ? '#4C1D95' : '#6D28D9'}
                   className="clock24-hour-label"
                 >
                   {t.label}
@@ -291,9 +291,9 @@ export default function Clock24({ tasks = [], selectedDate, onEditTask, timezone
             cx={center}
             cy={center}
             r={innerR - 6}
-            fill="#0F172A"
-            stroke="rgba(255, 255, 255, 0.08)"
-            strokeWidth="1"
+            fill="#FFFFFF"
+            stroke="#DDD6FE"
+            strokeWidth="1.5"
           />
         </svg>
 

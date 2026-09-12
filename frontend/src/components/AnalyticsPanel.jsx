@@ -28,7 +28,7 @@ function ScoreRing({ score }) {
         {/* Track */}
         <circle
           cx="65" cy="65" r={r}
-          fill="none" stroke="rgba(255,255,255,0.08)"
+          fill="none" stroke="#EDE9FE"
           strokeWidth="10"
         />
         {/* Progress arc */}
@@ -53,7 +53,13 @@ function ScoreRing({ score }) {
 
 function StatBadge({ label, value, color }) {
   return (
-    <div className="stat-badge" style={{ borderLeft: `3px solid ${color}` }}>
+    <div
+      className="stat-badge"
+      style={{
+        borderLeft: `3px solid ${color}`,
+        background: `${color}12`
+      }}
+    >
       <span className="stat-badge-value">{value}</span>
       <span className="stat-badge-label">{label}</span>
     </div>

@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Clock, CheckCircle, AlertTriangle, XCircle, PlayCircle, Calendar, Play, Check, Flame } from 'lucide-react';
 
 const STATUS_CONFIG = {
-  PLANNED: { label: 'Planned', bg: 'rgba(59, 130, 246, 0.2)', text: '#60A5FA', border: '#3B82F6', icon: Calendar },
-  IN_PROGRESS: { label: 'In Progress', bg: 'rgba(245, 158, 11, 0.25)', text: '#FBBF24', border: '#F59E0B', icon: PlayCircle },
-  COMPLETED: { label: 'Completed', bg: 'rgba(16, 185, 129, 0.2)', text: '#34D399', border: '#10B981', icon: CheckCircle },
-  MISSED: { label: 'Missed', bg: 'rgba(239, 68, 68, 0.2)', text: '#F87171', border: '#EF4444', icon: AlertTriangle },
-  CANCELLED: { label: 'Cancelled', bg: 'rgba(107, 114, 128, 0.2)', text: '#9CA3AF', border: '#6B7280', icon: XCircle }
+  PLANNED:     { label: 'Planned',     icon: Calendar,    statusBg: 'rgba(255,255,255,0.22)', statusBorder: 'rgba(255,255,255,0.45)' },
+  IN_PROGRESS: { label: 'In Progress', icon: PlayCircle,  statusBg: 'rgba(255,184,0,0.35)',   statusBorder: '#FFB800' },
+  COMPLETED:   { label: 'Completed',   icon: CheckCircle, statusBg: 'rgba(16,185,129,0.3)',   statusBorder: '#10B981' },
+  MISSED:      { label: 'Missed',      icon: AlertTriangle, statusBg: 'rgba(239,68,68,0.3)', statusBorder: '#EF4444' },
+  CANCELLED:   { label: 'Cancelled',   icon: XCircle,     statusBg: 'rgba(0,0,0,0.18)',       statusBorder: 'rgba(255,255,255,0.3)' }
 };
 
 const Timeline = ({ selectedDate, tasks, onEditTask, onStatusChange, onActualTimeAction }) => {
@@ -97,7 +97,7 @@ const Timeline = ({ selectedDate, tasks, onEditTask, onStatusChange, onActualTim
 
             const statusInfo = STATUS_CONFIG[task.status] || STATUS_CONFIG.PLANNED;
             const StatusIcon = statusInfo.icon;
-            const categoryColor = task.category?.color || '#3B82F6';
+            const categoryColor = task.category?.color || '#7C3AED';
 
             return (
               <div
@@ -107,12 +107,12 @@ const Timeline = ({ selectedDate, tasks, onEditTask, onStatusChange, onActualTim
                   top: `${topPx}px`,
                   height: `${heightPx}px`,
                   borderLeftColor: categoryColor,
-                  backgroundColor: statusInfo.bg
+                  backgroundColor: categoryColor
                 }}
                 onClick={() => onEditTask(task)}
               >
                 <div className="task-block-header">
-                  <div className="task-category-tag" style={{ backgroundColor: categoryColor }}>
+                  <div className="task-category-tag" style={{ backgroundColor: 'rgba(255,255,255,0.25)' }}>
                     {task.category?.name || 'General'}
                   </div>
 
@@ -123,7 +123,7 @@ const Timeline = ({ selectedDate, tasks, onEditTask, onStatusChange, onActualTim
                     <span className="midnight-clamp-badge">cont. tomorrow</span>
                   )}
 
-                  <div className="task-status-pill" style={{ color: statusInfo.text, borderColor: statusInfo.border }}>
+                  <div className="task-status-pill" style={{ backgroundColor: statusInfo.statusBg, borderColor: statusInfo.statusBorder }}>
                     <StatusIcon className="w-3.5 h-3.5 mr-1" />
                     <span>{statusInfo.label}</span>
                   </div>
