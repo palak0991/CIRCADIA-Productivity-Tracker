@@ -1,4 +1,4 @@
-# 24 Hour Visualizer
+# Circadia
 
 > **An interactive 24-hour visual day planner and productivity analytics platform.**
 > Built as a production-quality full-stack application demonstrating Java, Spring Boot, JWT, React, Docker, and CI/CD.
