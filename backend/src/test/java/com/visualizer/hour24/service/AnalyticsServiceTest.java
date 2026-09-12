@@ -83,4 +83,82 @@ class AnalyticsServiceTest {
         assertThat(analytics.getCategoryBreakdown()).hasSize(1);
         assertThat(analytics.getCategoryBreakdown().get(0).getCategoryName()).isEqualTo("Study");
     }
+
+    @Test
+    @DisplayName("Zero tasks: Should return 0 score and 0 total tasks without throwing divide by zero errors")
+    void testZeroTasksNoDivisionByZero() {
+        LocalDate date = LocalDate.of(2026, 8, 22);
+
+        when(taskRepository.findTasksInDateRange(eq(1L), any(Instant.class), any(Instant.class)))
+            .thenReturn(List.of());
+
+        DayAnalyticsResponse analytics = analyticsService.getAnalyticsForDate(1L, date, "UTC");
+
+        assertThat(analytics.getTotalTasks()).isEqualTo(0);
+        assertThat(analytics.getTotalPlannedMinutes()).isEqualTo(0);
+        assertThat(analytics.getTotalCompletedMinutes()).isEqualTo(0);
+        assertThat(analytics.getProductivityScore()).isEqualTo(0.0);
+        assertThat(analytics.getCategoryBreakdown()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("All CANCELLED tasks: Should be excluded from planned minutes and return 0.0 score without error")
+    void testAllCancelledTasksExcludedFromScore() {
+        LocalDate date = LocalDate.of(2026, 8, 22);
+        Instant dayStart = date.atStartOfDay(ZoneOffset.UTC).toInstant();
+
+        Task cancelled1 = Task.builder()
+            .id(1L).user(user).category(category).title("Gym Session")
+            .startDateTime(dayStart.plusSeconds(3600))
+            .endDateTime(dayStart.plusSeconds(7200))
+            .status(TaskStatus.CANCELLED).build();
+
+        Task cancelled2 = Task.builder()
+            .id(2L).user(user).category(category).title("Reading")
+            .startDateTime(dayStart.plusSeconds(10800))
+            .endDateTime(dayStart.plusSeconds(14400))
+            .status(TaskStatus.CANCELLED).build();
+
+        when(taskRepository.findTasksInDateRange(eq(1L), any(Instant.class), any(Instant.class)))
+            .thenReturn(List.of(cancelled1, cancelled2));
+
+        DayAnalyticsResponse analytics = analyticsService.getAnalyticsForDate(1L, date, "UTC");
+
+        assertThat(analytics.getTotalTasks()).isEqualTo(2);
+        assertThat(analytics.getCancelledTasks()).isEqualTo(2);
+        assertThat(analytics.getCompletedTasks()).isEqualTo(0);
+        assertThat(analytics.getTotalPlannedMinutes()).isEqualTo(0);
+        assertThat(analytics.getTotalCompletedMinutes()).isEqualTo(0);
+        assertThat(analytics.getProductivityScore()).isEqualTo(0.0);
+    }
+
+    @Test
+    @DisplayName("All COMPLETED tasks: Should hit max productivity score (100.0)")
+    void testAllCompletedTasksHitMaxScore() {
+        LocalDate date = LocalDate.of(2026, 8, 22);
+        Instant dayStart = date.atStartOfDay(ZoneOffset.UTC).toInstant();
+
+        Task completed1 = Task.builder()
+            .id(1L).user(user).category(category).title("Morning Workout")
+            .startDateTime(dayStart.plusSeconds(3600))
+            .endDateTime(dayStart.plusSeconds(7200)) // 60 min
+            .status(TaskStatus.COMPLETED).build();
+
+        Task completed2 = Task.builder()
+            .id(2L).user(user).category(category).title("Code Review")
+            .startDateTime(dayStart.plusSeconds(10800))
+            .endDateTime(dayStart.plusSeconds(18000)) // 120 min
+            .status(TaskStatus.COMPLETED).build();
+
+        when(taskRepository.findTasksInDateRange(eq(1L), any(Instant.class), any(Instant.class)))
+            .thenReturn(List.of(completed1, completed2));
+
+        DayAnalyticsResponse analytics = analyticsService.getAnalyticsForDate(1L, date, "UTC");
+
+        assertThat(analytics.getTotalTasks()).isEqualTo(2);
+        assertThat(analytics.getCompletedTasks()).isEqualTo(2);
+        assertThat(analytics.getTotalPlannedMinutes()).isEqualTo(180);
+        assertThat(analytics.getTotalCompletedMinutes()).isEqualTo(180);
+        assertThat(analytics.getProductivityScore()).isEqualTo(100.0);
+    }
 }

@@ -32,4 +32,7 @@ public class TaskRequest {
     private Instant endDateTime;
 
     private TaskStatus status;
+
+    @Builder.Default
+    private Boolean overrideConflict = false;
 }

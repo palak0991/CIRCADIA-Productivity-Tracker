@@ -20,6 +20,7 @@ public class ErrorResponse {
     private String message;
     private String path;
     private Map<String, String> fieldErrors;
+    private Object details;
 
     public static ErrorResponse of(int status, String error, String message, String path) {
         return ErrorResponse.builder()

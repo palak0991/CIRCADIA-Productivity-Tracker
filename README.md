@@ -3,7 +3,7 @@
 > **An interactive 24-hour visual day planner and productivity analytics platform.**
 > Built as a production-quality full-stack application demonstrating Java, Spring Boot, JWT, React, Docker, and CI/CD.
 
-[![CI — Build, Test & Docker](https://github.com/YOUR_USERNAME/24-hour-visualizer/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USERNAME/24-hour-visualizer/actions/workflows/ci.yml)
+[![CI — Build, Test & Docker](https://github.com/palak0991/24-hour-visualizer/actions/workflows/ci.yml/badge.svg)](https://github.com/palak0991/24-hour-visualizer/actions/workflows/ci.yml)
 
 ---
 
@@ -58,7 +58,7 @@
 
 ```bash
 # 1. Clone
-git clone https://github.com/YOUR_USERNAME/24-hour-visualizer.git
+git clone https://github.com/palak0991/24-hour-visualizer.git
 cd 24-hour-visualizer
 
 # 2. Create .env from template

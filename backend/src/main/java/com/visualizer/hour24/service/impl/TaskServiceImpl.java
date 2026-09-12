@@ -9,6 +9,7 @@ import com.visualizer.hour24.entity.Task;
 import com.visualizer.hour24.entity.User;
 import com.visualizer.hour24.enums.TaskStatus;
 import com.visualizer.hour24.exception.BadRequestException;
+import com.visualizer.hour24.exception.ConflictException;
 import com.visualizer.hour24.exception.ResourceNotFoundException;
 import com.visualizer.hour24.mapper.TaskMapper;
 import com.visualizer.hour24.repository.CategoryRepository;
@@ -35,6 +36,7 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public TaskResponse createTask(Long userId, TaskRequest request) {
         validateTaskTimes(request.getStartDateTime(), request.getEndDateTime());
+        checkForTaskOverlap(userId, request.getStartDateTime(), request.getEndDateTime(), null);
 
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
@@ -94,6 +96,8 @@ public class TaskServiceImpl implements TaskService {
 
         Task task = taskRepository.findByIdAndUserId(taskId, userId)
             .orElseThrow(() -> new ResourceNotFoundException("Task not found with id: " + taskId));
+
+        checkForTaskOverlap(userId, request.getStartDateTime(), request.getEndDateTime(), taskId);
 
         Category category = categoryRepository.findByIdAndUserId(request.getCategoryId(), userId)
             .orElseThrow(() -> new ResourceNotFoundException("Category not found or does not belong to user with id: " + request.getCategoryId()));
@@ -182,6 +186,16 @@ public class TaskServiceImpl implements TaskService {
         }
         if (!endDateTime.isAfter(startDateTime)) {
             throw new BadRequestException("Task end time must be strictly after start time.");
+        }
+    }
+
+    private void checkForTaskOverlap(Long userId, Instant startDateTime, Instant endDateTime, Long excludeTaskId) {
+        List<Task> overlappingTasks = taskRepository.findOverlappingTasks(userId, startDateTime, endDateTime, excludeTaskId);
+        if (!overlappingTasks.isEmpty()) {
+            List<TaskResponse> conflictingResponses = overlappingTasks.stream()
+                .map(taskMapper::toResponse)
+                .toList();
+            throw new ConflictException("Task time range conflicts with existing task(s)", conflictingResponses);
         }
     }
 }

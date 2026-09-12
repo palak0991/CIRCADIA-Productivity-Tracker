@@ -16,6 +16,19 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<ErrorResponse> handleConflict(ConflictException ex, HttpServletRequest request) {
+        ErrorResponse errorResponse = ErrorResponse.builder()
+            .timestamp(Instant.now().toString())
+            .status(HttpStatus.CONFLICT.value())
+            .error("CONFLICT")
+            .message(ex.getMessage())
+            .path(request.getRequestURI())
+            .details(ex.getConflictingTasks())
+            .build();
+        return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
+    }
+
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleResourceNotFound(ResourceNotFoundException ex, HttpServletRequest request) {
         ErrorResponse errorResponse = ErrorResponse.of(

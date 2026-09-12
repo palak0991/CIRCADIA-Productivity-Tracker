@@ -7,7 +7,14 @@ import TaskModal from '../components/TaskModal';
 import CategoryModal from '../components/CategoryModal';
 import AnalyticsPanel from '../components/AnalyticsPanel';
 import { useAuth } from '../context/AuthContext';
-import { getTasksForDate, createTask, updateTask, updateTaskStatus, deleteTask } from '../services/taskService';
+import {
+  getTasksForDate,
+  createTask,
+  updateTask,
+  updateTaskStatus,
+  updateActualTime,
+  deleteTask
+} from '../services/taskService';
 import { getCategories, createCategory, deleteCategory } from '../services/categoryService';
 
 const DashboardPage = () => {
@@ -109,6 +116,15 @@ const DashboardPage = () => {
     }
   };
 
+  const handleActualTimeAction = async (taskId, action, customTimestamp = null) => {
+    try {
+      await updateActualTime(taskId, action, customTimestamp);
+      refreshAll();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to update execution time');
+    }
+  };
+
   // ── Category Handlers ───────────────────────────────────────────────────────
   const handleCreateCategory = async (categoryData) => {
     try {
@@ -160,6 +176,7 @@ const DashboardPage = () => {
                   tasks={tasks}
                   onEditTask={handleEditTask}
                   onStatusChange={handleStatusChange}
+                  onActualTimeAction={handleActualTimeAction}
                 />
               </div>
             )}
@@ -202,6 +219,7 @@ const DashboardPage = () => {
         onClose={() => setIsTaskModalOpen(false)}
         onSave={handleSaveTask}
         onDelete={handleDeleteTask}
+        onActualTimeAction={handleActualTimeAction}
         taskToEdit={taskToEdit}
         categories={categories}
         selectedDate={selectedDate}

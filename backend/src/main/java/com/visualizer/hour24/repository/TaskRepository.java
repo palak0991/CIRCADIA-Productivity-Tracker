@@ -28,4 +28,14 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     List<Task> findTasksInDateRange(@Param("userId") Long userId,
                                    @Param("rangeStart") Instant rangeStart,
                                    @Param("rangeEnd") Instant rangeEnd);
+
+    @Query("SELECT t FROM Task t WHERE t.user.id = :userId " +
+           "AND (:excludeTaskId IS NULL OR t.id <> :excludeTaskId) " +
+           "AND t.startDateTime < :endDateTime " +
+           "AND t.endDateTime > :startDateTime " +
+           "ORDER BY t.startDateTime ASC")
+    List<Task> findOverlappingTasks(@Param("userId") Long userId,
+                                    @Param("startDateTime") Instant startDateTime,
+                                    @Param("endDateTime") Instant endDateTime,
+                                    @Param("excludeTaskId") Long excludeTaskId);
 }
