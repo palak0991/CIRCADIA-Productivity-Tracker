@@ -1,207 +1,225 @@
-# Circadia
+# Circadia (24-Hour Visualizer)
 
-> **An interactive 24-hour visual day planner and productivity analytics platform.**
-> Built as a production-quality full-stack application demonstrating Java, Spring Boot, JWT, React, Docker, and CI/CD.
+> **An intelligent 24-hour visual day planner, NLP task automation engine, and productivity analytics platform.**
+> Built as a production-grade full-stack polyglot application demonstrating **Java (Spring Boot 3)**, **Python (FastAPI & spaCy NLP)**, **React 19**, **PostgreSQL**, **Docker**, and **Microservice Architecture**.
 
 [![CI — Build, Test & Docker](https://github.com/palak0991/24-hour-visualizer/actions/workflows/ci.yml/badge.svg)](https://github.com/palak0991/24-hour-visualizer/actions/workflows/ci.yml)
+![Tests](https://img.shields.io/badge/tests-47%20passed-brightgreen)
+![Tech Stack](https://img.shields.io/badge/tech%20stack-Spring%20Boot%20%7C%20FastAPI%20%7C%20React%20%7C%20PostgreSQL-blue)
+![License](https://img.shields.io/badge/license-MIT-purple)
 
 ---
 
-## ✨ Features
+## ✨ Key Features
 
 | Feature | Description |
 |---|---|
-| **24-Hour Visual Timeline** | See your full day as a continuous visual grid — drag to scroll, click to create |
-| **Midnight-Crossing Tasks** | Tasks spanning midnight (e.g. 11 PM → 7 AM) stored as one DB record, visually clamped per day |
-| **Live Red Time-Line** | Glowing real-time indicator on the timeline showing current time, updates every second |
-| **Productivity Analytics** | Day score ring (0–100), status breakdown, per-category time bars with completion overlay |
-| **Missed Task Detection** | Background scheduler auto-marks overdue PLANNED/IN_PROGRESS tasks as MISSED every 15 min |
-| **Task Status Workflow** | PLANNED → IN_PROGRESS → COMPLETED (or MISSED / CANCELLED) |
-| **Category Management** | Color-coded categories with a full palette picker — 6 seeded on signup |
-| **Multi-Timezone Support** | Pick any timezone in the date header; all queries are timezone-aware |
-| **JWT Authentication** | Stateless JWT-secured REST API — register, login, auto-verify on reload |
-| **Glassmorphism Dark UI** | Polished dark glassmorphism theme with blur cards and gradient accents |
+| **✨ Natural Language Task Creation** | Type conversational phrases (e.g. *"Study DBMS for two hours tomorrow morning"*, *"Complete my Java assignment today from 4 PM to 5:30 PM"*) to auto-generate structured, validated task drafts via spaCy & dateparser. |
+| **🛡️ Zero-Hallucination Category Matching** | NLP parser strictly isolates and fuzzy-matches against the authenticated user's active categories without inventing false tags. |
+| **🔍 Ambiguity & Conflict Detection** | Identifies vague times (e.g. *"morning"*) and prompts clarifications; automatically flags contradictions between explicit time intervals and duration. |
+| **📈 Advanced Productivity Analytics** | Python analytics engine calculating planned vs. actual execution, overrun vs. underrun distinctions, velocity, category time bars, and hourly heatmaps. |
+| **⏱️ Actual Execution Tracking** | Live timestamp stamping (*Start Now*, *Complete Now*, *Reset*) and visual overrun indicators (`isOverrunning`) for ongoing tasks. |
+| **🕒 24-Hour Circular Visualizer** | Interactive circular timeline visualizer representing the entire 24-hour day cycle with glowing real-time indicator. |
+| **🌙 Midnight-Crossing Tasks** | Tasks spanning midnight (e.g. 11 PM → 7 AM) stored as a single continuous DB record, visually clamped per day in UI. |
+| **⏰ Missed Task Detection** | Automated Spring Boot background scheduler scanning and marking overdue `PLANNED` tasks as `MISSED` every 15 minutes. |
+| **🔒 Enterprise Security & Isolation** | Stateless JWT authentication (JJWT 0.12), user-isolated database context, and secure Spring Boot mediation preventing direct browser-to-Python exposure. |
+| **🌸 Soft Pink Aesthetic UI** | Beautiful blush-rose glassmorphism theme designed with custom CSS3, translucent blurred cards, and smooth micro-interactions. |
 
 ---
 
 ## 🏗️ Tech Stack
 
-**Backend**
-- Java 17, Spring Boot 3.2.5, Maven
-- Spring Data JPA + Hibernate (PostgreSQL 17)
-- Spring Security + JWT (JJWT 0.12)
-- Bean Validation, Lombok
-- JUnit 5, Mockito, MockMvc, H2 (test)
+* **Frontend:** React 19, Vite 5.4, React Router v7, Axios (JWT Interceptor), Lucide Icons, Soft Pink Glassmorphism CSS3, Vitest
+* **Backend:** Java 17, Spring Boot 3.2.5, Spring Security, Spring Data JPA, Hibernate, JJWT 0.12, Lombok, Maven
+* **AI & NLP Microservice:** Python 3.10+, FastAPI, Uvicorn, spaCy (`en_core_web_sm`), dateparser, Pydantic v2, Pytest
+* **Database & Persistence:** PostgreSQL 17, H2 In-Memory Database (Zero-Config Dev/Test)
+* **DevOps & Architecture:** Docker Multi-stage Builds, Docker Compose, Nginx Reverse Proxy, GitHub Actions CI
 
-**Frontend**
-- React 18, Vite 5.4.11
-- React Router v6
-- Axios + JWT bearer interceptor
-- Lucide React icons
-- Custom glassmorphism CSS (no component framework)
+---
 
-**Infrastructure**
-- Docker multi-stage build (4 stages)
-- Docker Compose (PostgreSQL + Spring Boot + Nginx)
-- Nginx reverse proxy (SPA routing + `/api` proxy + gzip + security headers)
-- GitHub Actions CI (parallel test + build + GHCR push)
+## 🏛️ System Architecture
+
+```mermaid
+flowchart TD
+    User([User Browser / React 19 SPA :5173])
+    
+    subgraph SpringBootApp [Spring Boot 3 Backend :8080]
+        AuthFilter[Spring Security & JWT Filter]
+        TaskCtrl[Task & Category REST Controllers]
+        NLPCtrl[NLP Proxy Controller]
+        Scheduler[Missed-Task Background Scheduler]
+        TaskService[Task Service & Conflict Engine]
+    end
+
+    subgraph PythonMicroservice [Python Analytics Microservice :8000]
+        FastAPI[FastAPI Router]
+        SpacyParser[spaCy NLP & Entity Extraction]
+        DateResolver[dateparser & Ambiguity Resolution]
+        AnalyticsEngine[Planned vs. Actual Analytics Engine]
+    end
+
+    subgraph Database [PostgreSQL 17 / H2]
+        DB[(Users, Tasks, Categories)]
+    end
+
+    User -->|JWT Authenticated Requests| AuthFilter
+    AuthFilter --> TaskCtrl
+    AuthFilter --> NLPCtrl
+    
+    TaskCtrl --> TaskService
+    TaskService --> DB
+    Scheduler --> DB
+
+    NLPCtrl -->|1. Enriches with User Categories| DB
+    NLPCtrl -->|2. Mediated REST Call| FastAPI
+    
+    FastAPI --> SpacyParser
+    FastAPI --> DateResolver
+    FastAPI --> AnalyticsEngine
+    FastAPI -- NLP Draft Response --> NLPCtrl
+    NLPCtrl -- Editable Draft --> User
+```
 
 ---
 
 ## 🚀 Quick Start
 
-### Prerequisites
-- Docker Desktop ≥ 24 and Docker Compose v2
-- *Or* locally: JDK 17, Maven 3.9+, Node 20, PostgreSQL 17
-
-### Run with Docker Compose (recommended)
+### Option 1: Run with Docker Compose (Recommended)
 
 ```bash
-# 1. Clone
+# 1. Clone repository
 git clone https://github.com/palak0991/24-hour-visualizer.git
 cd 24-hour-visualizer
 
-# 2. Create .env from template
-cp .env.example .env
-# Edit .env — at minimum set a strong JWT_SECRET and DB_PASSWORD
-
-# 3. Build & start everything
+# 2. Build & run full stack
 docker compose up --build
-
-# App is live at http://localhost
-# API health: http://localhost/api/health
 ```
+* **Frontend**: `http://localhost:5173` (or `http://localhost`)
+* **Spring Boot API**: `http://localhost:8080/api`
+* **Python Microservice**: `http://localhost:8000/docs`
 
-### Run locally (development)
+---
 
-**Backend**
+### Option 2: Run Locally (Step-by-Step)
+
+#### 1. Python Analytics & NLP Microservice
+```bash
+cd python-analytics
+python -m pip install -r requirements.txt
+python -m spacy download en_core_web_sm
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+```
+*Health Check*: `http://localhost:8000/health`
+
+#### 2. Spring Boot Backend
 ```bash
 cd backend
-# Ensure PostgreSQL is running on port 5432 with DB "visualizer24"
+# Uses default zero-config in-memory H2 database (or PostgreSQL if active)
 mvn spring-boot:run
-# → http://localhost:8080
 ```
+*Backend API*: `http://localhost:8080` | *H2 Console*: `http://localhost:8080/h2-console`
 
-**Frontend**
+#### 3. React Frontend
 ```bash
 cd frontend
 npm install
-echo "VITE_API_BASE_URL=http://localhost:8080/api" > .env.local
 npm run dev
-# → http://localhost:5173
 ```
+*Web App*: `http://localhost:5173`
 
 ---
 
-## 📁 Project Structure
+## 🔌 API Overview
 
-```
-24-hour-visualizer/
-├── backend/                        # Spring Boot application
-│   ├── src/main/java/com/visualizer/hour24/
-│   │   ├── controller/             # REST controllers (Auth, Category, Task, Analytics)
-│   │   ├── service/                # Business logic interfaces + impls
-│   │   ├── repository/             # Spring Data JPA repositories
-│   │   ├── entity/                 # JPA entities (User, Category, Task)
-│   │   ├── dto/                    # Request/Response DTOs
-│   │   ├── security/               # JWT filter, UserDetails, EntryPoint
-│   │   ├── scheduler/              # Missed-task detection scheduler
-│   │   ├── exception/              # Global exception handler
-│   │   └── config/                 # SecurityConfig
-│   └── src/test/                   # Unit + integration tests (9 passing)
-│
-├── frontend/                       # React + Vite SPA
-│   └── src/
-│       ├── components/             # Timeline, Navbar, DateHeader, TaskModal,
-│       │                           #   CategoryModal, AnalyticsPanel
-│       ├── pages/                  # LoginPage, RegisterPage, DashboardPage
-│       ├── services/               # Axios service modules per domain
-│       ├── context/                # AuthContext (JWT state)
-│       └── styles/                 # Glassmorphism CSS
-│
-├── nginx/nginx.conf                # Nginx reverse proxy config
-├── Dockerfile                      # 4-stage multi-stage build
-├── docker-compose.yml              # Full-stack orchestration
-├── .github/workflows/ci.yml        # GitHub Actions CI
-└── .env.example                    # Environment variable template
-```
-
----
-
-## 🔌 REST API Reference
-
+### NLP & Task Automation
 | Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| `POST` | `/api/auth/register` | Public | Register new user (seeds 6 default categories) |
-| `POST` | `/api/auth/login` | Public | Login, returns JWT |
-| `GET` | `/api/auth/me` | JWT | Get current user profile |
-| `GET` | `/api/health` | Public | Health check |
-| `GET/POST` | `/api/categories` | JWT | List / create categories |
-| `GET/PUT/DELETE` | `/api/categories/{id}` | JWT | Get / update / delete category |
-| `GET` | `/api/tasks?date=YYYY-MM-DD&timezone=UTC` | JWT | Tasks overlapping a day |
-| `POST` | `/api/tasks` | JWT | Create task |
-| `GET/PUT/DELETE` | `/api/tasks/{id}` | JWT | Get / update / delete task |
-| `PATCH` | `/api/tasks/{id}/status` | JWT | Update task status |
-| `GET` | `/api/analytics/day?date=YYYY-MM-DD&timezone=UTC` | JWT | Day analytics |
-| `POST` | `/api/analytics/detect-missed` | JWT | On-demand missed task detection |
+|---|---|---|---|
+| `POST` | `/api/nlp/parse-task` | JWT | Parses natural language task description into a validated draft with clarification feedback. |
+| `POST` | `/api/v1/nlp/parse-task` | Internal | Python microservice direct parsing endpoint. |
+
+### Tasks & Categories
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| `GET` | `/api/tasks?date=YYYY-MM-DD&timezone=UTC` | JWT | Fetch schedule overlapping specified date. |
+| `POST` | `/api/tasks` | JWT | Create task with overlap conflict validation. |
+| `PUT/DELETE` | `/api/tasks/{id}` | JWT | Edit or delete task. |
+| `PATCH` | `/api/tasks/{id}/status` | JWT | Update task lifecycle status (`PLANNED`, `COMPLETED`, etc.). |
+| `PATCH` | `/api/tasks/{id}/actual-time` | JWT | Stamp real-time execution (`START`, `COMPLETE`, `RESET`). |
+| `GET/POST` | `/api/categories` | JWT | List and create user categories. |
+
+### Analytics & Insights
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| `GET` | `/api/analytics/day?date=YYYY-MM-DD` | JWT | Daily productivity metrics & category breakdown. |
+| `POST` | `/api/analytics/detect-missed` | JWT | On-demand scan for overdue tasks. |
+| `POST` | `/api/v1/analytics/calculate` | Internal | Python engine for planned vs. actual duration analytics. |
 
 ---
 
-## 🧪 Testing
+## 🧪 Testing & Quality Assurance
+
+The application maintains comprehensive test coverage across unit, integration, and slice tests:
 
 ```bash
+# Run Spring Boot test suite (30 passing tests)
 cd backend
 mvn test
+
+# Run Python NLP & Analytics test suite (17 passing tests)
+cd python-analytics
+python -m pytest tests/ -v
+
+# Run Frontend tests & production build
+cd frontend
+npm run test
+npm run build
 ```
 
-**Test coverage includes:**
-- `TaskRepositoryTest` — midnight-crossing JPQL query + user isolation
-- `TaskServiceTest` — start/end time validation
-- `AnalyticsServiceTest` — productivity score computation + category breakdown
-- `JwtTokenProviderTest` — token generation, validation, expiry
-- `AuthControllerTest` — register + login MockMvc integration tests
-- `TaskControllerTest` — create task + date-filtered list MockMvc tests
+**Total Test Suite: 47/47 passing tests**
+- Spring Boot: `TaskRepositoryTest`, `TaskServiceTest`, `NLPTaskServiceTest`, `PythonAnalyticsServiceTest`, `AnalyticsServiceTest`, `JwtTokenProviderTest`.
+- Python: `test_nlp_parser.py` (explicit dates, relative dates, durations, ambiguity flags, category matching, API endpoints), `test_analytics.py` (duration separation, zero division safety, heatmaps).
 
 ---
 
-## 🌍 Environment Variables
+## 📁 Repository Structure
 
-| Variable | Default | Description |
-|---|---|---|
-| `DB_URL` | `jdbc:postgresql://localhost:5432/visualizer24` | JDBC connection URL |
-| `DB_USERNAME` | `postgres` | PostgreSQL username |
-| `DB_PASSWORD` | `postgres` | PostgreSQL password |
-| `JWT_SECRET` | *(hex string)* | HMAC-SHA256 JWT signing key (change in prod!) |
-| `JWT_EXPIRATION_MS` | `86400000` | Token TTL in ms (default 24 h) |
-| `ALLOWED_ORIGINS` | `http://localhost:5173,http://localhost:3000` | CORS allowed origins |
-| `MISSED_TASK_INTERVAL_MS` | `900000` | Missed-task scheduler interval (15 min) |
-| `APP_PORT` | `80` | Host port mapped to Nginx |
-| `SPRING_PROFILES_ACTIVE` | `dev` | Spring profile (`dev` / `prod`) |
-
----
-
-## 📊 Architecture
-
-```
-Browser (React SPA)
-       │
-       ▼
-  Nginx :80
-  ├── GET /          → serves dist/index.html (SPA)
-  ├── GET /assets/*  → serves hashed JS/CSS (long-cache)
-  └── /api/*         → proxy_pass → backend:8080
-                              │
-                    Spring Boot (JRE 17)
-                    ├── JWT auth filter
-                    ├── REST controllers
-                    ├── JPA / Hibernate
-                    └── Scheduled missed-task scanner
-                              │
-                    PostgreSQL 17
+```text
+24-hour-visualizer/
+├── backend/                        # Spring Boot 3 Java Service
+│   ├── src/main/java/com/visualizer/hour24/
+│   │   ├── controller/             # Auth, Task, Category, Analytics, NLP Controllers
+│   │   ├── service/                # Business logic & Python proxy client
+│   │   ├── repository/             # Spring Data JPA repositories
+│   │   ├── entity/                 # User, Category, Task entities
+│   │   ├── dto/                    # Request / Response DTOs
+│   │   ├── security/               # JWT authentication filter & config
+│   │   └── scheduler/              # Missed-task background scanner
+│   └── src/test/                   # 30 JUnit 5 & Mockito test cases
+│
+├── python-analytics/               # Python FastAPI Microservice
+│   ├── app/
+│   │   ├── nlp_parser.py           # spaCy & dateparser NLP parsing engine
+│   │   ├── analytics_engine.py     # Planned vs. actual execution analytics
+│   │   ├── schemas.py              # Pydantic v2 schemas
+│   │   └── main.py                 # FastAPI application routes
+│   └── tests/                      # 17 pytest test cases
+│
+├── frontend/                       # React 19 + Vite SPA
+│   ├── src/
+│   │   ├── components/             # TaskModal (NLP Quick Create), Timeline, AnalyticsPanel
+│   │   ├── pages/                  # Dashboard, Login, Register
+│   │   ├── services/               # Axios API clients
+│   │   └── styles/                 # Soft Pink Glassmorphism CSS
+│   └── package.json
+│
+├── docker-compose.yml              # Container orchestration
+├── Dockerfile                      # Multi-stage production container
+└── README.md                       # Project documentation
 ```
 
 ---
 
 ## 👤 Author
 
-Built as a college placement portfolio project demonstrating full-stack engineering capabilities with production-quality patterns.
+**Palak**  
+GitHub: [@palak0991](https://github.com/palak0991)
