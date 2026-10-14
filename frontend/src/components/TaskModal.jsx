@@ -9,9 +9,9 @@ import { parseTaskNL } from '../services/taskService';
 const SAMPLE_PROMPTS = [
   'Study DBMS for two hours tomorrow morning',
   'Complete my Java assignment today from 4 PM to 5:30 PM',
-  'Gym workout for 45 minutes on Friday at 6 PM',
-  'Prepare weekly project status presentation for Monday 10:00 AM to 11:30 AM',
-  'Read research paper for one hour'
+  'Read for 45 minutes tomorrow at 7 PM',
+  'Work on my project for 90 minutes this Saturday',
+  'Prepare for my SQL interview tomorrow from 10 AM to noon'
 ];
 
 const TaskModal = ({
