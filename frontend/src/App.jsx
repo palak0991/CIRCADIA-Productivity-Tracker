@@ -11,7 +11,7 @@ const ProtectedRoute = ({ children }) => {
     return (
       <div className="fullscreen-loader">
         <div className="spinner" />
-        <p>Loading 24 Hour Visualizer...</p>
+        <p>Loading Circadia...</p>
       </div>
     );
   }

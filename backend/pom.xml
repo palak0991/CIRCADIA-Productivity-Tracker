@@ -14,8 +14,8 @@
     <groupId>com.visualizer</groupId>
     <artifactId>hour24-backend</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>24 Hour Visualizer Backend</name>
-    <description>Production-grade backend for 24 Hour Visualizer day planner</description>
+    <name>Circadia Backend</name>
+    <description>Production-grade backend for Circadia day planner</description>
 
     <properties>
         <java.version>17</java.version>

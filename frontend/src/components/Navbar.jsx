@@ -1,21 +1,40 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Clock, LogOut, Tag, User } from 'lucide-react';
+import { Clock, LogOut, Tag, User, BarChart2, CalendarDays } from 'lucide-react';
 
-const Navbar = ({ onOpenCategories }) => {
+const Navbar = ({ onOpenCategories, activeTab = 'planner', onTabChange }) => {
   const { user, logout } = useAuth();
 
   return (
     <header className="glass-panel nav-header">
       <div className="nav-brand">
         <div className="brand-logo">
-          <Clock className="w-6 h-6 text-accent" />
+          <Clock className="w-6 h-6 text-pink-400" />
         </div>
         <div>
-          <h1 className="brand-title">24 Hour Visualizer</h1>
-          <p className="brand-subtitle">Visual Day Planner & Productivity Tracker</p>
+          <h1 className="brand-title">Dayloop</h1>
+          <p className="brand-subtitle">Visual Day Planner & Productivity Intelligence</p>
         </div>
       </div>
+
+      {user && onTabChange && (
+        <div className="nav-tabs-group">
+          <button
+            onClick={() => onTabChange('planner')}
+            className={`nav-tab-btn ${activeTab === 'planner' ? 'active' : ''}`}
+          >
+            <CalendarDays className="w-4 h-4" />
+            <span>Day Planner</span>
+          </button>
+          <button
+            onClick={() => onTabChange('analytics')}
+            className={`nav-tab-btn ${activeTab === 'analytics' ? 'active' : ''}`}
+          >
+            <BarChart2 className="w-4 h-4" />
+            <span>Productivity Analytics</span>
+          </button>
+        </div>
+      )}
 
       <div className="nav-actions">
         {user && (
@@ -30,7 +49,7 @@ const Navbar = ({ onOpenCategories }) => {
             </button>
 
             <div className="user-badge" title={`Logged in as ${user.email}`}>
-              <User className="w-4 h-4 text-accent" />
+              <User className="w-4 h-4 text-pink-400" />
               <span className="user-name">{user.username}</span>
             </div>
 

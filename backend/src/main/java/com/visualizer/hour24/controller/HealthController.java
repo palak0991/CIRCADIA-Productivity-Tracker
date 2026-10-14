@@ -16,7 +16,7 @@ public class HealthController {
     public ResponseEntity<Map<String, Object>> getHealthStatus() {
         return ResponseEntity.ok(Map.of(
             "status", "UP",
-            "service", "24 Hour Visualizer API",
+            "service", "Circadia API",
             "version", "0.0.1-SNAPSHOT",
             "timestamp", Instant.now().toString()
         ));

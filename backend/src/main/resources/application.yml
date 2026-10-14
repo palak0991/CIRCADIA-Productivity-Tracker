@@ -17,13 +17,16 @@ app:
     allowed-origins: ${ALLOWED_ORIGINS:http://localhost:5173,http://localhost:3000}
   scheduler:
     missed-task-interval-ms: ${MISSED_TASK_INTERVAL_MS:900000} # 15 minutes
+  analytics:
+    python-service-url: ${PYTHON_ANALYTICS_URL:http://localhost:8000}
+    timeout-ms: ${ANALYTICS_TIMEOUT_MS:6000}
 
 ---
 # ─── Default Dev Profile: In-Memory H2 (Zero-Config) ──────────────────────────
 spring:
   config:
     activate:
-      on-profile: dev
+      on-profile: dev, local
   datasource:
     url: jdbc:h2:mem:visualizer24;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL
     driver-class-name: org.h2.Driver

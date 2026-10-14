@@ -35,7 +35,7 @@ const LoginPage = () => {
             <Clock className="w-10 h-10 text-accent" />
           </div>
           <h2>Welcome Back</h2>
-          <p>Sign in to your 24 Hour Visualizer account</p>
+          <p>Sign in to your Circadia account</p>
         </div>
 
         {error && <div className="error-alert">{error}</div>}

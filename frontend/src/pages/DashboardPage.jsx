@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Navbar from '../components/Navbar';
 import DateHeader from '../components/DateHeader';
 import Timeline from '../components/Timeline';
@@ -6,6 +6,7 @@ import Clock24 from '../components/Clock24';
 import TaskModal from '../components/TaskModal';
 import CategoryModal from '../components/CategoryModal';
 import AnalyticsPanel from '../components/AnalyticsPanel';
+import ProductivityAnalytics from '../components/ProductivityAnalytics';
 import { useAuth } from '../context/AuthContext';
 import {
   getTasksForDate,
@@ -21,6 +22,7 @@ const DashboardPage = () => {
   const { user } = useAuth();
   const todayStr = new Date().toISOString().split('T')[0];
 
+  const [activeTab, setActiveTab] = useState('planner'); // 'planner' | 'analytics'
   const [selectedDate, setSelectedDate] = useState(todayStr);
   const [timezone, setTimezone] = useState(user?.timezone || 'UTC');
   const [viewMode, setViewMode] = useState('split'); // 'split' | 'clock' | 'timeline'
@@ -146,71 +148,81 @@ const DashboardPage = () => {
 
   return (
     <div className="dashboard-container">
-      <Navbar onOpenCategories={() => setIsCategoryModalOpen(true)} />
+      <Navbar
+        onOpenCategories={() => setIsCategoryModalOpen(true)}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+      />
 
       <main className="dashboard-main">
-        <DateHeader
-          selectedDate={selectedDate}
-          onDateChange={setSelectedDate}
-          timezone={timezone}
-          onTimezoneChange={setTimezone}
-          onAddNewTask={handleOpenNewTask}
-          viewMode={viewMode}
-          onViewModeChange={setViewMode}
-        />
-
-        {error && <div className="error-alert my-3">{error}</div>}
-
-        {loading ? (
-          <div className="glass-panel loading-skeleton">
-            <div className="spinner" />
-            <p>Loading 24-hour visualization...</p>
-          </div>
+        {activeTab === 'analytics' ? (
+          <ProductivityAnalytics timezone={timezone} />
         ) : (
-          <div className={`dashboard-content-grid dashboard-view--${viewMode}`}>
-            {/* ── 24-Hour Timeline Column ─────────────────────── */}
-            {(viewMode === 'split' || viewMode === 'timeline') && (
-              <div className="dashboard-timeline-col">
-                <Timeline
-                  selectedDate={selectedDate}
-                  tasks={tasks}
-                  onEditTask={handleEditTask}
-                  onStatusChange={handleStatusChange}
-                  onActualTimeAction={handleActualTimeAction}
-                />
+          <>
+            <DateHeader
+              selectedDate={selectedDate}
+              onDateChange={setSelectedDate}
+              timezone={timezone}
+              onTimezoneChange={setTimezone}
+              onAddNewTask={handleOpenNewTask}
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
+            />
+
+            {error && <div className="error-alert my-3">{error}</div>}
+
+            {loading ? (
+              <div className="glass-panel loading-skeleton">
+                <div className="spinner" />
+                <p>Loading 24-hour visualization...</p>
+              </div>
+            ) : (
+              <div className={`dashboard-content-grid dashboard-view--${viewMode}`}>
+                {/* ── 24-Hour Timeline Column ─────────────────────── */}
+                {(viewMode === 'split' || viewMode === 'timeline') && (
+                  <div className="dashboard-timeline-col">
+                    <Timeline
+                      selectedDate={selectedDate}
+                      tasks={tasks}
+                      onEditTask={handleEditTask}
+                      onStatusChange={handleStatusChange}
+                      onActualTimeAction={handleActualTimeAction}
+                    />
+                  </div>
+                )}
+
+                {/* ── 24-Hour Circular Clock Dial View Column (when in clock only mode) ── */}
+                {viewMode === 'clock' && (
+                  <div className="dashboard-clock-main-col">
+                    <Clock24
+                      tasks={tasks}
+                      selectedDate={selectedDate}
+                      onEditTask={handleEditTask}
+                      timezone={timezone}
+                    />
+                  </div>
+                )}
+
+                {/* ── Right Sidebar: 24h Clock (in Split mode) + Day Analytics Panel ───── */}
+                <div className="dashboard-analytics-col">
+                  {viewMode === 'split' && (
+                    <Clock24
+                      tasks={tasks}
+                      selectedDate={selectedDate}
+                      onEditTask={handleEditTask}
+                      timezone={timezone}
+                    />
+                  )}
+
+                  <AnalyticsPanel
+                    date={selectedDate}
+                    timezone={timezone}
+                    refreshSignal={analyticsRefreshSignal}
+                  />
+                </div>
               </div>
             )}
-
-            {/* ── 24-Hour Circular Clock Dial View Column (when in clock only mode) ─────────────────────── */}
-            {viewMode === 'clock' && (
-              <div className="dashboard-clock-main-col">
-                <Clock24
-                  tasks={tasks}
-                  selectedDate={selectedDate}
-                  onEditTask={handleEditTask}
-                  timezone={timezone}
-                />
-              </div>
-            )}
-
-            {/* ── Right Sidebar: 24h Clock (in Split mode) + Analytics Panel ─────────────── */}
-            <div className="dashboard-analytics-col">
-              {viewMode === 'split' && (
-                <Clock24
-                  tasks={tasks}
-                  selectedDate={selectedDate}
-                  onEditTask={handleEditTask}
-                  timezone={timezone}
-                />
-              )}
-
-              <AnalyticsPanel
-                date={selectedDate}
-                timezone={timezone}
-                refreshSignal={analyticsRefreshSignal}
-              />
-            </div>
-          </div>
+          </>
         )}
       </main>
 
