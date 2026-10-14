@@ -1,10 +1,14 @@
 package com.visualizer.hour24.service.impl;
 
+import com.visualizer.hour24.dto.request.NLPParseRequest;
 import com.visualizer.hour24.dto.request.PythonAnalyticsRequest;
 import com.visualizer.hour24.dto.request.PythonAnalyticsTaskPayload;
+import com.visualizer.hour24.dto.response.NLPParseResponse;
+import com.visualizer.hour24.entity.Category;
 import com.visualizer.hour24.entity.Task;
 import com.visualizer.hour24.enums.TaskStatus;
 import com.visualizer.hour24.exception.BadRequestException;
+import com.visualizer.hour24.repository.CategoryRepository;
 import com.visualizer.hour24.repository.TaskRepository;
 import com.visualizer.hour24.service.PythonAnalyticsService;
 import lombok.extern.slf4j.Slf4j;
@@ -25,14 +29,17 @@ import java.util.*;
 public class PythonAnalyticsServiceImpl implements PythonAnalyticsService {
 
     private final TaskRepository taskRepository;
+    private final CategoryRepository categoryRepository;
     private final RestClient restClient;
     private final String pythonServiceUrl;
 
     public PythonAnalyticsServiceImpl(
             TaskRepository taskRepository,
+            CategoryRepository categoryRepository,
             @Value("${app.analytics.python-service-url:http://localhost:8000}") String pythonServiceUrl,
             @Value("${app.analytics.timeout-ms:6000}") int timeoutMs) {
         this.taskRepository = taskRepository;
+        this.categoryRepository = categoryRepository;
         this.pythonServiceUrl = pythonServiceUrl;
 
         SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
@@ -96,6 +103,47 @@ public class PythonAnalyticsServiceImpl implements PythonAnalyticsService {
         } catch (Exception ex) {
             log.error("Failed to communicate with Python analytics microservice at {}: {}", pythonServiceUrl, ex.getMessage());
             throw new BadRequestException("Analytics service temporarily unavailable. Please ensure the Python analytics service is running on " + pythonServiceUrl);
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public NLPParseResponse parseTaskNaturalLanguage(Long userId, String text, String timezoneStr) {
+        ZoneId zoneId;
+        try {
+            zoneId = ZoneId.of(timezoneStr != null ? timezoneStr : "UTC");
+        } catch (DateTimeException e) {
+            zoneId = ZoneId.of("UTC");
+        }
+
+        // Gather categories belonging strictly to this user
+        List<Category> userCategories = categoryRepository.findAllByUserId(userId);
+        List<NLPParseRequest.CategoryOptionDto> categoryDtos = userCategories.stream()
+                .map(c -> NLPParseRequest.CategoryOptionDto.builder()
+                        .id(c.getId())
+                        .name(c.getName())
+                        .color(c.getColor())
+                        .build())
+                .toList();
+
+        NLPParseRequest request = NLPParseRequest.builder()
+                .text(text)
+                .referenceTime(Instant.now())
+                .timezone(zoneId.getId())
+                .availableCategories(categoryDtos)
+                .build();
+
+        try {
+            log.info("Forwarding NLP task parse request to Python microservice at {}", pythonServiceUrl);
+            return restClient.post()
+                    .uri("/api/v1/nlp/parse-task")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(request)
+                    .retrieve()
+                    .body(NLPParseResponse.class);
+        } catch (Exception ex) {
+            log.error("Failed to parse natural language task via Python service at {}: {}", pythonServiceUrl, ex.getMessage());
+            throw new BadRequestException("NLP parsing service temporarily unavailable. Please verify the Python analytics microservice is running on " + pythonServiceUrl);
         }
     }
 

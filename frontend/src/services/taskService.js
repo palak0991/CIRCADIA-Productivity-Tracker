@@ -33,3 +33,13 @@ export const updateActualTime = async (id, action, customTimestamp = null) => {
 export const deleteTask = async (id) => {
   await api.delete(`/tasks/${id}`);
 };
+
+export const parseTaskNL = async (text, timezone) => {
+  const userTz = timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+  const response = await api.post('/nlp/parse-task', {
+    text,
+    timezone: userTz
+  });
+  return response.data;
+};
+

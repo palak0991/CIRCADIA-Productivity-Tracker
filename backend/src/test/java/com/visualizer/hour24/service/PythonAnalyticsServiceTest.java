@@ -5,6 +5,7 @@ import com.visualizer.hour24.entity.Task;
 import com.visualizer.hour24.entity.User;
 import com.visualizer.hour24.enums.TaskStatus;
 import com.visualizer.hour24.exception.BadRequestException;
+import com.visualizer.hour24.repository.CategoryRepository;
 import com.visualizer.hour24.repository.TaskRepository;
 import com.visualizer.hour24.service.impl.PythonAnalyticsServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,6 +32,9 @@ class PythonAnalyticsServiceTest {
     @Mock
     private TaskRepository taskRepository;
 
+    @Mock
+    private CategoryRepository categoryRepository;
+
     private PythonAnalyticsServiceImpl pythonAnalyticsService;
 
     private User user;
@@ -39,7 +43,7 @@ class PythonAnalyticsServiceTest {
     @BeforeEach
     void setUp() {
         // Points to mock/unreachable url to test graceful exception handling
-        pythonAnalyticsService = new PythonAnalyticsServiceImpl(taskRepository, "http://localhost:59999", 500);
+        pythonAnalyticsService = new PythonAnalyticsServiceImpl(taskRepository, categoryRepository, "http://localhost:59999", 500);
 
         user = User.builder().id(99L).username("testuser").email("test@example.com").build();
         category = Category.builder().id(5L).user(user).name("Focus").color("#EC4899").build();

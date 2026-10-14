@@ -4,8 +4,9 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app.schemas import AnalyticsCalculateRequest, AnalyticsResponse
+from app.schemas import AnalyticsCalculateRequest, AnalyticsResponse, NLPParseRequest, NLPParseResponse
 from app.analytics_engine import calculate_analytics
+from app.nlp_parser import parse_natural_language_task
 
 logging.basicConfig(
     level=logging.INFO,
@@ -55,7 +56,14 @@ def calculate_productivity_metrics(request: AnalyticsCalculateRequest):
         return calculate_analytics(request)
     except Exception as e:
         logger.exception("Error executing analytics calculation")
-        raise HTTPException(status_code=500, detail=f"Analytics calculation error: {str(e)}")
+@app.post("/api/v1/nlp/parse-task", response_model=NLPParseResponse, tags=["NLP"])
+def parse_task(request: NLPParseRequest):
+    try:
+        logger.info(f"Parsing natural language task: '{request.text}' (timezone={request.timezone})")
+        return parse_natural_language_task(request)
+    except Exception as e:
+        logger.exception("Error during NLP task parsing")
+        raise HTTPException(status_code=500, detail=f"NLP parsing error: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn

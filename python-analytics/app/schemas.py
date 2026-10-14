@@ -106,3 +106,34 @@ class AnalyticsResponse(BaseModel):
     heatmapImageBase64: Optional[str] = None
     dateRange: Dict[str, Any]
     generatedAt: datetime
+
+# ─── NLP Natural Language Task Creation Schemas ──────────────────────────────
+class CategoryOption(BaseModel):
+    id: int
+    name: str
+    color: Optional[str] = None
+
+class NLPParseRequest(BaseModel):
+    text: str = Field(..., description="Natural language task description")
+    referenceTime: Optional[datetime] = Field(None, description="Anchor timestamp in UTC for relative dates")
+    timezone: str = Field("UTC", description="Target timezone name (e.g. UTC, Asia/Kolkata)")
+    availableCategories: List[CategoryOption] = Field(default_factory=list)
+
+class NLPParseResponse(BaseModel):
+    originalText: str
+    title: str
+    description: Optional[str] = None
+    date: Optional[str] = None           # YYYY-MM-DD
+    startTime: Optional[str] = None      # HH:MM (24h)
+    endTime: Optional[str] = None        # HH:MM (24h)
+    durationMinutes: Optional[int] = None
+    categoryId: Optional[int] = None
+    categoryName: Optional[str] = None
+    startDateTime: Optional[str] = None  # ISO-8601 UTC
+    endDateTime: Optional[str] = None    # ISO-8601 UTC
+    missingFields: List[str] = Field(default_factory=list)
+    needsConfirmation: bool = False
+    clarificationQuestions: List[str] = Field(default_factory=list)
+    confidence: Dict[str, str] = Field(default_factory=dict)
+    inconsistentDuration: bool = False
+

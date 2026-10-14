@@ -28,3 +28,12 @@ mvnw.cmd
 # Logs & Environment
 *.log
 .env
+
+# Python Analytics
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.venv/
+venv/
+ENV/

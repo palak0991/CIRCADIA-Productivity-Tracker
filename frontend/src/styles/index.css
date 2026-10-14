@@ -381,6 +381,11 @@ body {
   border: 1px solid var(--border-glass);
   box-shadow: 0 20px 40px rgba(124, 58, 237, 0.15);
 }
+.task-modal-card {
+  max-width: 580px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
 .modal-header {
   display: flex;
   align-items: center;
@@ -423,6 +428,198 @@ body {
   font-size: 0.85rem;
   font-weight: 600;
 }
+
+/* Natural Language Task Creation Card */
+.nlp-box {
+  background: linear-gradient(135deg, rgba(253, 242, 248, 0.85) 0%, rgba(255, 228, 230, 0.5) 100%);
+  border: 1px solid #FBCFE8;
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  margin-bottom: 1.1rem;
+  box-shadow: 0 4px 15px rgba(236, 72, 153, 0.06);
+}
+
+.nlp-box-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  margin-bottom: 0.65rem;
+}
+
+.nlp-box-title {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font-heading);
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #9D174D;
+}
+
+.nlp-box-subtitle {
+  font-size: 0.78rem;
+  color: #BE185D;
+  opacity: 0.85;
+}
+
+.nlp-input-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+
+.nlp-textarea {
+  flex: 1;
+  background: #FFFFFF;
+  border: 1px solid #F472B6;
+  border-radius: var(--radius-sm);
+  padding: 0.55rem 0.75rem;
+  font-size: 0.85rem;
+  color: var(--text-main);
+  font-family: inherit;
+  resize: none;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.nlp-textarea:focus {
+  border-color: #DB2777;
+  box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.18);
+}
+
+.btn-nlp {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  background: linear-gradient(135deg, #EC4899 0%, #E11D48 100%);
+  color: #FFFFFF;
+  font-weight: 600;
+  font-size: 0.82rem;
+  padding: 0 1rem;
+  border-radius: var(--radius-sm);
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 3px 10px rgba(236, 72, 153, 0.3);
+  transition: all 0.2s ease;
+}
+
+.btn-nlp:hover:not(:disabled) {
+  background: linear-gradient(135deg, #DB2777 0%, #BE123C 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 5px 14px rgba(236, 72, 153, 0.4);
+}
+
+.btn-nlp:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.nlp-examples {
+  margin-top: 0.65rem;
+}
+
+.nlp-examples-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #9D174D;
+  margin-bottom: 0.3rem;
+}
+
+.nlp-chips-scroll {
+  display: flex;
+  gap: 0.4rem;
+  overflow-x: auto;
+  padding-bottom: 0.3rem;
+  scrollbar-width: thin;
+}
+
+.nlp-chips-scroll::-webkit-scrollbar {
+  height: 4px;
+}
+.nlp-chips-scroll::-webkit-scrollbar-thumb {
+  background: #FBCFE8;
+  border-radius: 4px;
+}
+
+.nlp-chip {
+  background: #FFFFFF;
+  border: 1px solid #FBCFE8;
+  color: #831843;
+  font-size: 0.74rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+
+.nlp-chip:hover {
+  background: #FCE7F3;
+  border-color: #EC4899;
+  color: #701A75;
+  transform: translateY(-1px);
+}
+
+.nlp-feedback-banner {
+  margin-top: 0.75rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  animation: fadeIn 0.2s ease;
+}
+
+.nlp-feedback-success {
+  background: rgba(236, 253, 245, 0.95);
+  border: 1px solid #A7F3D0;
+  color: #065F46;
+}
+
+.nlp-feedback-warning {
+  background: rgba(254, 243, 199, 0.95);
+  border: 1px solid #FDE68A;
+  color: #92400E;
+}
+
+.nlp-feedback-error {
+  background: rgba(254, 242, 242, 0.95);
+  border: 1px solid #FECACA;
+  color: #991B1B;
+}
+
+.nlp-feedback-header {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.nlp-feedback-title {
+  font-weight: 600;
+}
+
+.nlp-confidence-tag {
+  margin-left: auto;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid currentColor;
+}
+
+.nlp-feedback-list {
+  margin-top: 0.4rem;
+  padding-left: 1.25rem;
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
 
 /* Category Modal */
 .category-chips { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 0.5rem; margin-bottom: 1rem; }

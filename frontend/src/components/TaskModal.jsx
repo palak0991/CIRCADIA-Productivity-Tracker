@@ -1,5 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { X, Trash2, Calendar, Clock, Tag, AlignLeft, CheckCircle, Play, Check, RotateCcw, Flame } from 'lucide-react';
+import {
+  X, Trash2, Calendar, Clock, Tag, AlignLeft, CheckCircle,
+  Play, Check, RotateCcw, Flame, Sparkles, Wand2, Loader2,
+  AlertCircle, Info, CheckCircle2
+} from 'lucide-react';
+import { parseTaskNL } from '../services/taskService';
+
+const SAMPLE_PROMPTS = [
+  'Study DBMS for two hours tomorrow morning',
+  'Complete my Java assignment today from 4 PM to 5:30 PM',
+  'Gym workout for 45 minutes on Friday at 6 PM',
+  'Prepare weekly project status presentation for Monday 10:00 AM to 11:30 AM',
+  'Read research paper for one hour'
+];
 
 const TaskModal = ({
   isOpen,
@@ -21,6 +34,11 @@ const TaskModal = ({
   const [status, setStatus] = useState('PLANNED');
   const [error, setError] = useState('');
 
+  // Natural Language Task Creation state
+  const [nlText, setNlText] = useState('');
+  const [isParsing, setIsParsing] = useState(false);
+  const [parseFeedback, setParseFeedback] = useState(null);
+
   useEffect(() => {
     if (taskToEdit) {
       setTitle(taskToEdit.title || '');
@@ -31,6 +49,8 @@ const TaskModal = ({
       setActualStartDateTime(formatToDateTimeLocal(taskToEdit.actualStartDateTime));
       setActualEndDateTime(formatToDateTimeLocal(taskToEdit.actualEndDateTime));
       setStatus(taskToEdit.status || 'PLANNED');
+      setNlText('');
+      setParseFeedback(null);
     } else {
       setTitle('');
       setDescription('');
@@ -42,6 +62,8 @@ const TaskModal = ({
       setActualStartDateTime('');
       setActualEndDateTime('');
       setStatus('PLANNED');
+      setNlText('');
+      setParseFeedback(null);
     }
     setError('');
   }, [taskToEdit, selectedDate, categories, isOpen]);
@@ -54,6 +76,60 @@ const TaskModal = ({
     const pad = (num) => String(num).padStart(2, '0');
     return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
   }
+
+  const handleNLPParse = async () => {
+    if (!nlText.trim()) return;
+    setIsParsing(true);
+    setParseFeedback(null);
+    setError('');
+
+    try {
+      const userTz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+      const res = await parseTaskNL(nlText, userTz);
+
+      if (res.title) {
+        setTitle(res.title);
+      }
+      if (res.description) {
+        setDescription(res.description);
+      }
+      if (res.categoryId) {
+        setCategoryId(String(res.categoryId));
+      }
+
+      if (res.startDateTime) {
+        setStartDateTime(formatToDateTimeLocal(res.startDateTime));
+      }
+      if (res.endDateTime) {
+        setEndDateTime(formatToDateTimeLocal(res.endDateTime));
+      } else if (res.durationMinutes && res.startDateTime) {
+        const sDate = new Date(res.startDateTime);
+        const eDate = new Date(sDate.getTime() + res.durationMinutes * 60000);
+        setEndDateTime(formatToDateTimeLocal(eDate.toISOString()));
+      }
+
+      const questions = res.clarificationQuestions || [];
+      const missing = res.missingFields || [];
+      const hasIssues = questions.length > 0 || missing.length > 0 || res.requiresConfirmation;
+
+      setParseFeedback({
+        type: hasIssues ? 'warning' : 'success',
+        title: hasIssues ? 'Draft Populated with Clarifications' : 'Task Draft Ready!',
+        questions: questions,
+        missing: missing,
+        confidence: res.confidenceScore != null ? Math.round(res.confidenceScore * 100) : null
+      });
+    } catch (err) {
+      console.error('NLP parsing error:', err);
+      setParseFeedback({
+        type: 'error',
+        title: 'NLP Service Notice',
+        questions: ['Natural language parsing could not be completed. You can still fill out the task manually below.']
+      });
+    } finally {
+      setIsParsing(false);
+    }
+  };
 
   const handleQuickAction = async (action) => {
     if (!taskToEdit?.id || !onActualTimeAction) return;
@@ -106,7 +182,7 @@ const TaskModal = ({
 
   return (
     <div className="modal-backdrop">
-      <div className="modal-card glass-panel">
+      <div className="modal-card glass-panel task-modal-card">
         <div className="modal-header">
           <h3>{taskToEdit ? 'Edit Task' : 'Create New Task'}</h3>
           <button onClick={onClose} className="btn-icon text-muted">
@@ -116,7 +192,91 @@ const TaskModal = ({
 
         {error && <div className="error-alert">{error}</div>}
 
+        {!taskToEdit && (
+          <div className="nlp-box">
+            <div className="nlp-box-header">
+              <div className="nlp-box-title">
+                <Sparkles className="w-4 h-4 text-accent-pink" />
+                <span>Natural Language Quick Create</span>
+              </div>
+              <span className="nlp-box-subtitle">Describe your task in plain words & autofill</span>
+            </div>
+
+            <div className="nlp-input-row">
+              <textarea
+                value={nlText}
+                onChange={(e) => setNlText(e.target.value)}
+                placeholder="e.g. Study DBMS for two hours tomorrow morning"
+                className="nlp-textarea"
+                rows={2}
+                disabled={isParsing}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleNLPParse();
+                  }
+                }}
+              />
+              <button
+                type="button"
+                onClick={handleNLPParse}
+                disabled={isParsing || !nlText.trim()}
+                className="btn btn-nlp"
+                title="Parse task description with AI"
+              >
+                {isParsing ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Wand2 className="w-4 h-4" />
+                )}
+                <span>{isParsing ? 'Parsing...' : 'Autofill'}</span>
+              </button>
+            </div>
+
+            <div className="nlp-examples">
+              <span className="nlp-examples-label">Try quick example:</span>
+              <div className="nlp-chips-scroll">
+                {SAMPLE_PROMPTS.map((prompt, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    className="nlp-chip"
+                    onClick={() => {
+                      setNlText(prompt);
+                    }}
+                  >
+                    "{prompt}"
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {parseFeedback && (
+              <div className={`nlp-feedback-banner nlp-feedback-${parseFeedback.type}`}>
+                <div className="nlp-feedback-header">
+                  {parseFeedback.type === 'success' && <CheckCircle2 className="w-4 h-4 text-emerald-500" />}
+                  {parseFeedback.type === 'warning' && <AlertCircle className="w-4 h-4 text-amber-500" />}
+                  {parseFeedback.type === 'error' && <Info className="w-4 h-4 text-rose-500" />}
+                  <span className="nlp-feedback-title">{parseFeedback.title}</span>
+                  {parseFeedback.confidence != null && (
+                    <span className="nlp-confidence-tag">{parseFeedback.confidence}% confidence</span>
+                  )}
+                </div>
+
+                {parseFeedback.questions && parseFeedback.questions.length > 0 && (
+                  <ul className="nlp-feedback-list">
+                    {parseFeedback.questions.map((q, idx) => (
+                      <li key={idx}>{q}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="modal-form">
+
           <div className="form-group">
             <label>Task Title</label>
             <input
