@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Clock, LogOut, Tag, User, BarChart2, CalendarDays } from 'lucide-react';
+import { Clock, LogOut, Tag, User, BarChart2, CalendarDays, Flame } from 'lucide-react';
 
 const Navbar = ({ onOpenCategories, activeTab = 'planner', onTabChange }) => {
   const { user, logout } = useAuth();
@@ -33,8 +33,16 @@ const Navbar = ({ onOpenCategories, activeTab = 'planner', onTabChange }) => {
             <BarChart2 className="w-4 h-4" />
             <span>Productivity Analytics</span>
           </button>
+          <button
+            onClick={() => onTabChange('activity')}
+            className={`nav-tab-btn ${activeTab === 'activity' ? 'active' : ''}`}
+          >
+            <Flame className="w-4 h-4 text-emerald-400" />
+            <span>Activity History</span>
+          </button>
         </div>
       )}
+
 
       <div className="nav-actions">
         {user && (

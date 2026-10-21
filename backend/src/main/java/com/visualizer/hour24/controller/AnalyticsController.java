@@ -58,4 +58,16 @@ public class AnalyticsController {
         analyticsService.detectAndMarkMissedTasks(userId);
         return ResponseEntity.ok("Missed task detection completed");
     }
+
+    @GetMapping("/activity-calendar")
+    public ResponseEntity<com.visualizer.hour24.dto.response.ActivityCalendarResponse> getActivityCalendar(
+            @RequestParam(value = "days", required = false, defaultValue = "365") int days,
+            @RequestParam(value = "timezone", required = false, defaultValue = "UTC") String timezone) {
+
+        Long userId = securityUtils.getCurrentUserId();
+        com.visualizer.hour24.dto.response.ActivityCalendarResponse response =
+                analyticsService.getActivityCalendar(userId, days, timezone);
+        return ResponseEntity.ok(response);
+    }
 }
+

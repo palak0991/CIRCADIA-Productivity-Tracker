@@ -23,6 +23,15 @@ const analyticsService = {
    */
   detectMissed: () =>
     api.post('/analytics/detect-missed').then(r => r.data),
+
+  /**
+   * Fetch 365-day LeetCode-style activity contribution calendar and streaks.
+   * @param {number} days     - default 365
+   * @param {string} timezone - e.g. "Asia/Kolkata" or "UTC"
+   */
+  getActivityCalendar: (days = 365, timezone = 'UTC') =>
+    api.get('/analytics/activity-calendar', { params: { days, timezone } }).then(r => r.data),
 };
+
 
 export default analyticsService;

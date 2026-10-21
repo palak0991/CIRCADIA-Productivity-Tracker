@@ -7,7 +7,9 @@ import TaskModal from '../components/TaskModal';
 import CategoryModal from '../components/CategoryModal';
 import AnalyticsPanel from '../components/AnalyticsPanel';
 import ProductivityAnalytics from '../components/ProductivityAnalytics';
+import ActivityCalendar from '../components/ActivityCalendar';
 import { useAuth } from '../context/AuthContext';
+
 import {
   getTasksForDate,
   createTask,
@@ -157,6 +159,17 @@ const DashboardPage = () => {
       <main className="dashboard-main">
         {activeTab === 'analytics' ? (
           <ProductivityAnalytics timezone={timezone} />
+        ) : activeTab === 'activity' ? (
+          <div className="dashboard-activity-tab-view">
+            <ActivityCalendar
+              timezone={timezone}
+              refreshSignal={analyticsRefreshSignal}
+              onSelectDate={(date) => {
+                setSelectedDate(date);
+                setActiveTab('planner');
+              }}
+            />
+          </div>
         ) : (
           <>
             <DateHeader
@@ -177,54 +190,69 @@ const DashboardPage = () => {
                 <p>Loading 24-hour visualization...</p>
               </div>
             ) : (
-              <div className={`dashboard-content-grid dashboard-view--${viewMode}`}>
-                {/* ── 24-Hour Timeline Column ─────────────────────── */}
-                {(viewMode === 'split' || viewMode === 'timeline') && (
-                  <div className="dashboard-timeline-col">
-                    <Timeline
-                      selectedDate={selectedDate}
-                      tasks={tasks}
-                      onEditTask={handleEditTask}
-                      onStatusChange={handleStatusChange}
-                      onActualTimeAction={handleActualTimeAction}
-                    />
-                  </div>
-                )}
-
-                {/* ── 24-Hour Circular Clock Dial View Column (when in clock only mode) ── */}
-                {viewMode === 'clock' && (
-                  <div className="dashboard-clock-main-col">
-                    <Clock24
-                      tasks={tasks}
-                      selectedDate={selectedDate}
-                      onEditTask={handleEditTask}
-                      timezone={timezone}
-                    />
-                  </div>
-                )}
-
-                {/* ── Right Sidebar: 24h Clock (in Split mode) + Day Analytics Panel ───── */}
-                <div className="dashboard-analytics-col">
-                  {viewMode === 'split' && (
-                    <Clock24
-                      tasks={tasks}
-                      selectedDate={selectedDate}
-                      onEditTask={handleEditTask}
-                      timezone={timezone}
-                    />
+              <>
+                <div className={`dashboard-content-grid dashboard-view--${viewMode}`}>
+                  {/* ── 24-Hour Timeline Column ─────────────────────── */}
+                  {(viewMode === 'split' || viewMode === 'timeline') && (
+                    <div className="dashboard-timeline-col">
+                      <Timeline
+                        selectedDate={selectedDate}
+                        tasks={tasks}
+                        onEditTask={handleEditTask}
+                        onStatusChange={handleStatusChange}
+                        onActualTimeAction={handleActualTimeAction}
+                      />
+                    </div>
                   )}
 
-                  <AnalyticsPanel
-                    date={selectedDate}
+                  {/* ── 24-Hour Circular Clock Dial View Column (when in clock only mode) ── */}
+                  {viewMode === 'clock' && (
+                    <div className="dashboard-clock-main-col">
+                      <Clock24
+                        tasks={tasks}
+                        selectedDate={selectedDate}
+                        onEditTask={handleEditTask}
+                        timezone={timezone}
+                      />
+                    </div>
+                  )}
+
+                  {/* ── Right Sidebar: 24h Clock (in Split mode) + Day Analytics Panel ───── */}
+                  <div className="dashboard-analytics-col">
+                    {viewMode === 'split' && (
+                      <Clock24
+                        tasks={tasks}
+                        selectedDate={selectedDate}
+                        onEditTask={handleEditTask}
+                        timezone={timezone}
+                      />
+                    )}
+
+                    <AnalyticsPanel
+                      date={selectedDate}
+                      timezone={timezone}
+                      refreshSignal={analyticsRefreshSignal}
+                    />
+                  </div>
+                </div>
+
+                {/* ── LeetCode-style Live Activity Contribution Calendar ───────────────── */}
+                <div className="dashboard-activity-section mt-8">
+                  <ActivityCalendar
                     timezone={timezone}
                     refreshSignal={analyticsRefreshSignal}
+                    onSelectDate={(date) => {
+                      setSelectedDate(date);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
                   />
                 </div>
-              </div>
+              </>
             )}
           </>
         )}
       </main>
+
 
       <TaskModal
         isOpen={isTaskModalOpen}

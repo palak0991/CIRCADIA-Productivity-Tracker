@@ -2102,3 +2102,487 @@ body {
   font-weight: 500;
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   LeetCode-Style Live Activity Contribution Calendar & Insights
+   ═══════════════════════════════════════════════════════════════════════════ */
+.activity-calendar-card {
+  padding: 1.5rem;
+  background: #18181b;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 16px 36px -8px rgba(0, 0, 0, 0.4);
+  color: #f4f4f5;
+  margin-bottom: 2rem;
+}
+
+.activity-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.activity-title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.activity-icon-badge {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  background: rgba(34, 197, 94, 0.15);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.activity-title {
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.activity-subtitle {
+  font-size: 0.8rem;
+  color: #a1a1aa;
+}
+
+.activity-refresh-btn {
+  background: #27272a;
+  color: #e4e4e7;
+  border: 1px solid #3f3f46;
+}
+
+.activity-refresh-btn:hover {
+  background: #3f3f46;
+  color: #ffffff;
+}
+
+/* ── KPI Stats Row ──────────────────────────────────────────────────────── */
+.activity-stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.activity-stat-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: #202024;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1rem;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.activity-stat-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(34, 197, 94, 0.3);
+}
+
+.stat-icon-wrapper {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.stat-streak { background: rgba(249, 115, 22, 0.15); border: 1px solid rgba(249, 115, 22, 0.3); }
+.stat-longest { background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); }
+.stat-active { background: rgba(34, 197, 94, 0.15); border: 1px solid rgba(34, 197, 94, 0.3); }
+.stat-time { background: rgba(20, 184, 166, 0.15); border: 1px solid rgba(20, 184, 166, 0.3); }
+.stat-completed { background: rgba(6, 182, 212, 0.15); border: 1px solid rgba(6, 182, 212, 0.3); }
+
+.stat-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #71717a;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stat-value {
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.stat-unit {
+  font-size: 0.75rem;
+  color: #71717a;
+  font-weight: 500;
+}
+
+/* ── Heatmap LeetCode Surface ───────────────────────────────────────────── */
+.activity-heatmap-container {
+  background: #141416;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-md);
+  padding: 1.25rem 1rem;
+}
+
+.activity-loading-skeleton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 1rem;
+  gap: 0.75rem;
+  color: #71717a;
+}
+
+.activity-grid-scroll {
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+  scrollbar-width: thin;
+  scrollbar-color: #3f3f46 transparent;
+}
+
+.activity-grid-scroll::-webkit-scrollbar {
+  height: 6px;
+}
+
+.activity-grid-scroll::-webkit-scrollbar-thumb {
+  background: #3f3f46;
+  border-radius: 4px;
+}
+
+.activity-grid-wrapper {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  min-width: max-content;
+}
+
+/* Weekday Column */
+.activity-weekdays-column {
+  display: flex;
+  flex-direction: column;
+  gap: 3.5px;
+  padding-top: 1px;
+}
+
+.weekday-label {
+  height: 12px;
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: #71717a;
+  line-height: 12px;
+  text-align: right;
+  width: 24px;
+}
+
+/* Months Grouping matching the reference screenshot */
+.activity-months-group {
+  display: flex;
+  gap: 12px; /* Distinct gap between months as in LeetCode screenshot */
+}
+
+.activity-month-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.activity-month-columns {
+  display: flex;
+  gap: 3.5px;
+}
+
+.activity-column {
+  display: flex;
+  flex-direction: column;
+  gap: 3.5px;
+}
+
+/* Cells */
+.activity-cell {
+  width: 12px;
+  height: 12px;
+  border-radius: 2.5px;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  outline: none;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  position: relative;
+}
+
+.activity-cell--empty {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* LeetCode Green Shades */
+.activity-level-0 {
+  background-color: #27272a; /* Empty dark gray */
+}
+
+.activity-level-1 {
+  background-color: #166534; /* Light forest green */
+}
+
+.activity-level-2 {
+  background-color: #22c55e; /* Medium emerald */
+}
+
+.activity-level-3 {
+  background-color: #4ade80; /* Bright green */
+}
+
+.activity-level-4 {
+  background-color: #86efac; /* Vivid neon luminous green */
+  box-shadow: 0 0 5px rgba(134, 239, 172, 0.4);
+}
+
+.activity-cell:hover:not(.activity-cell--empty) {
+  transform: scale(1.35);
+  z-index: 30;
+  outline: 1.5px solid #ffffff;
+  box-shadow: 0 0 10px rgba(34, 197, 94, 0.8);
+}
+
+.activity-cell--selected {
+  outline: 2px solid #38bdf8 !important;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.7) !important;
+  transform: scale(1.2);
+}
+
+.activity-month-label {
+  font-size: 0.7rem;
+  color: #a1a1aa;
+  margin-top: 8px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  text-align: center;
+}
+
+/* ── Hover Preview Tooltip ──────────────────────────────────────────────── */
+.activity-hover-preview {
+  margin-top: 0.85rem;
+  background: #202024;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-sm);
+  padding: 0.65rem 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  animation: fadeIn 0.15s ease-out;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+.preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.preview-date {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.preview-badge {
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(34, 197, 94, 0.15);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.preview-stats {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  color: #d4d4d8;
+}
+
+.preview-empty {
+  color: #71717a;
+  font-style: italic;
+}
+
+.preview-divider {
+  color: #52525b;
+}
+
+.preview-tasks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-top: 0.25rem;
+  padding-top: 0.35rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.preview-task-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.74rem;
+}
+
+.preview-cat-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.preview-task-title {
+  flex: 1;
+  color: #e4e4e7;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.preview-task-time {
+  color: #a1a1aa;
+  font-weight: 600;
+}
+
+.preview-more-tasks {
+  font-size: 0.68rem;
+  color: #71717a;
+  font-style: italic;
+}
+
+/* ── Footer & Legend ────────────────────────────────────────────────────── */
+.activity-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.activity-legend {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.legend-label {
+  font-size: 0.7rem;
+  color: #71717a;
+  padding: 0 4px;
+}
+
+.legend-swatch {
+  width: 11px;
+  height: 11px;
+  border-radius: 2px;
+}
+
+.activity-hint {
+  font-size: 0.72rem;
+  color: #71717a;
+}
+
+/* ── Selected Day Detailed Drawer ───────────────────────────────────────── */
+.activity-selected-card {
+  margin-top: 1.25rem;
+  background: #202024;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.25rem;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.selected-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.selected-card-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.selected-card-subtitle {
+  font-size: 0.8rem;
+  color: #a1a1aa;
+}
+
+.selected-tasks-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 0.6rem;
+  margin-top: 0.5rem;
+}
+
+.selected-task-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: #18181b;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.75rem;
+}
+
+.selected-task-cat-strip {
+  width: 4px;
+  height: 28px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.selected-task-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.selected-task-name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #ffffff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.selected-task-cat-name {
+  font-size: 0.7rem;
+  color: #71717a;
+}
+
+.selected-task-dur {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #4ade80;
+  white-space: nowrap;
+}
+
+

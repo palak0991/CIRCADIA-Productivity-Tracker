@@ -153,4 +153,140 @@ public class AnalyticsServiceImpl implements AnalyticsService {
         }
         return Math.max(0, ChronoUnit.MINUTES.between(effectiveStart, effectiveEnd));
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public com.visualizer.hour24.dto.response.ActivityCalendarResponse getActivityCalendar(Long userId, int days, String timezone) {
+        ZoneId zoneId;
+        try {
+            zoneId = ZoneId.of(timezone != null ? timezone : "UTC");
+        } catch (DateTimeException e) {
+            zoneId = ZoneId.of("UTC");
+        }
+
+        int targetDays = days > 0 ? Math.min(days, 730) : 365;
+        LocalDate today = LocalDate.now(zoneId);
+        LocalDate startDate = today.minusDays(targetDays - 1);
+
+        Instant rangeStart = startDate.atStartOfDay(zoneId).toInstant();
+        Instant rangeEnd = today.plusDays(1).atStartOfDay(zoneId).toInstant();
+
+        List<Task> completedTasks = taskRepository.findCompletedTasksInDateRange(userId, rangeStart, rangeEnd);
+
+        Map<LocalDate, List<Task>> tasksByDate = new HashMap<>();
+        for (Task t : completedTasks) {
+            Instant completionInstant = t.getActualEndDateTime() != null ? t.getActualEndDateTime() : t.getEndDateTime();
+            LocalDate taskDate = completionInstant.atZone(zoneId).toLocalDate();
+            if (!taskDate.isBefore(startDate) && !taskDate.isAfter(today)) {
+                tasksByDate.computeIfAbsent(taskDate, k -> new ArrayList<>()).add(t);
+            }
+        }
+
+        List<com.visualizer.hour24.dto.response.ActivityDayDto> dailyContributions = new ArrayList<>(targetDays);
+        int totalActiveDays = 0;
+        long totalTasksCompleted = 0;
+        long totalWorkMinutes = 0;
+
+        for (int i = 0; i < targetDays; i++) {
+            LocalDate currentDate = startDate.plusDays(i);
+            List<Task> dayTasks = tasksByDate.getOrDefault(currentDate, Collections.emptyList());
+
+            long dayCount = dayTasks.size();
+            long dayMinutes = 0;
+            List<com.visualizer.hour24.dto.response.ActivityTaskSummaryDto> summaries = new ArrayList<>();
+
+            for (Task t : dayTasks) {
+                long duration;
+                if (t.getActualStartDateTime() != null && t.getActualEndDateTime() != null) {
+                    duration = Math.max(0, ChronoUnit.MINUTES.between(t.getActualStartDateTime(), t.getActualEndDateTime()));
+                } else {
+                    duration = Math.max(0, ChronoUnit.MINUTES.between(t.getStartDateTime(), t.getEndDateTime()));
+                }
+                dayMinutes += duration;
+
+                summaries.add(com.visualizer.hour24.dto.response.ActivityTaskSummaryDto.builder()
+                        .id(t.getId())
+                        .title(t.getTitle())
+                        .categoryName(t.getCategory() != null ? t.getCategory().getName() : "General")
+                        .categoryColor(t.getCategory() != null ? t.getCategory().getColor() : "#EC4899")
+                        .durationMinutes(duration)
+                        .build());
+            }
+
+            int level = calculateActivityLevel(dayCount, dayMinutes);
+
+            if (dayCount > 0 || dayMinutes > 0) {
+                totalActiveDays++;
+            }
+            totalTasksCompleted += dayCount;
+            totalWorkMinutes += dayMinutes;
+
+            dailyContributions.add(com.visualizer.hour24.dto.response.ActivityDayDto.builder()
+                    .date(currentDate)
+                    .count(dayCount)
+                    .workMinutes(dayMinutes)
+                    .level(level)
+                    .tasks(summaries)
+                    .build());
+        }
+
+        int currentStreak = 0;
+        int longestStreak = 0;
+        int currentRunningStreak = 0;
+
+        for (com.visualizer.hour24.dto.response.ActivityDayDto day : dailyContributions) {
+            if (day.getCount() > 0 || day.getWorkMinutes() > 0) {
+                currentRunningStreak++;
+                if (currentRunningStreak > longestStreak) {
+                    longestStreak = currentRunningStreak;
+                }
+            } else {
+                currentRunningStreak = 0;
+            }
+        }
+
+        int idx = dailyContributions.size() - 1;
+        if (idx >= 0) {
+            com.visualizer.hour24.dto.response.ActivityDayDto todayDay = dailyContributions.get(idx);
+            boolean todayActive = (todayDay.getCount() > 0 || todayDay.getWorkMinutes() > 0);
+            int startCheck = todayActive ? idx : idx - 1;
+            while (startCheck >= 0) {
+                com.visualizer.hour24.dto.response.ActivityDayDto d = dailyContributions.get(startCheck);
+                if (d.getCount() > 0 || d.getWorkMinutes() > 0) {
+                    currentStreak++;
+                    startCheck--;
+                } else {
+                    break;
+                }
+            }
+        }
+
+        return com.visualizer.hour24.dto.response.ActivityCalendarResponse.builder()
+                .startDate(startDate)
+                .endDate(today)
+                .totalActiveDays(totalActiveDays)
+                .currentStreak(currentStreak)
+                .longestStreak(longestStreak)
+                .totalTasksCompleted(totalTasksCompleted)
+                .totalWorkMinutes(totalWorkMinutes)
+                .dailyContributions(dailyContributions)
+                .build();
+    }
+
+    private int calculateActivityLevel(long taskCount, long workMinutes) {
+        if (taskCount == 0 && workMinutes == 0) {
+            return 0;
+        }
+        if (workMinutes > 180 || taskCount >= 5) {
+            return 4;
+        }
+        if (workMinutes > 90 || taskCount >= 3) {
+            return 3;
+        }
+        if (workMinutes > 30 || taskCount >= 2) {
+            return 2;
+        }
+        return 1;
+    }
 }
+

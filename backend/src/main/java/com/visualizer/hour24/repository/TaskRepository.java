@@ -38,4 +38,14 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
                                     @Param("startDateTime") Instant startDateTime,
                                     @Param("endDateTime") Instant endDateTime,
                                     @Param("excludeTaskId") Long excludeTaskId);
+
+    @Query("SELECT t FROM Task t WHERE t.user.id = :userId " +
+           "AND t.status = com.visualizer.hour24.enums.TaskStatus.COMPLETED " +
+           "AND ((t.actualEndDateTime IS NOT NULL AND t.actualEndDateTime >= :rangeStart AND t.actualEndDateTime < :rangeEnd) " +
+           "  OR (t.actualEndDateTime IS NULL AND t.endDateTime >= :rangeStart AND t.endDateTime < :rangeEnd)) " +
+           "ORDER BY COALESCE(t.actualEndDateTime, t.endDateTime) ASC")
+    List<Task> findCompletedTasksInDateRange(@Param("userId") Long userId,
+                                            @Param("rangeStart") Instant rangeStart,
+                                            @Param("rangeEnd") Instant rangeEnd);
+
 }
