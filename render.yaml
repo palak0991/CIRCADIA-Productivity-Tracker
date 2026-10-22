@@ -1,0 +1,57 @@
+services:
+  # ── 1. Python Analytics & NLP Microservice ──────────────────────────────
+  - type: web
+    name: circadia-python-analytics
+    env: python
+    rootDir: python-analytics
+    buildCommand: "pip install -r requirements.txt && python -m spacy download en_core_web_sm"
+    startCommand: "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+    healthCheckPath: /health
+    plan: free
+
+  # ── 2. Spring Boot Backend Service ──────────────────────────────────────
+  - type: web
+    name: circadia-backend
+    env: docker
+    dockerfilePath: ./backend/Dockerfile
+    healthCheckPath: /api/health
+    plan: free
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: DB_URL
+        fromDatabase:
+          name: circadia-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: PYTHON_ANALYTICS_URL
+        fromService:
+          type: web
+          name: circadia-python-analytics
+          property: host
+
+  # ── 3. React Frontend ───────────────────────────────────────────────────
+  - type: web
+    name: circadia-frontend
+    env: static
+    rootDir: frontend
+    buildCommand: "npm install && npm run build"
+    staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: circadia-backend
+          property: host
+
+databases:
+  # ── Managed PostgreSQL Database ─────────────────────────────────────────
+  - name: circadia-db
+    plan: free
+    databaseName: visualizer24
+    user: postgres
