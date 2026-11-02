@@ -54,4 +54,4 @@ databases:
   - name: circadia-db
     plan: free
     databaseName: visualizer24
-    user: postgres
+    user: circadia_user
