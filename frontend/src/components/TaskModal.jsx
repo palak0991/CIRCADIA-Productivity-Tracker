@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   X, Trash2, Calendar, Clock, Tag, AlignLeft, CheckCircle,
   Play, Check, RotateCcw, Flame, Sparkles, Wand2, Loader2,
-  AlertCircle, Info, CheckCircle2
+  AlertCircle, Info, CheckCircle2, ArrowRight, CornerDownLeft,
+  CalendarDays, Hourglass, Layers, PlayCircle, XCircle, AlertTriangle
 } from 'lucide-react';
 import { parseTaskNL } from '../services/taskService';
 
@@ -14,6 +15,14 @@ const SAMPLE_PROMPTS = [
   'Prepare for my SQL interview tomorrow from 10 AM to noon'
 ];
 
+const STATUS_ICONS = {
+  PLANNED: CalendarDays,
+  IN_PROGRESS: PlayCircle,
+  COMPLETED: CheckCircle2,
+  MISSED: AlertTriangle,
+  CANCELLED: XCircle
+};
+
 const TaskModal = ({
   isOpen,
   onClose,
@@ -21,7 +30,7 @@ const TaskModal = ({
   onDelete,
   onActualTimeAction,
   taskToEdit,
-  categories,
+  categories = [],
   selectedDate
 }) => {
   const [title, setTitle] = useState('');
@@ -67,6 +76,44 @@ const TaskModal = ({
     }
     setError('');
   }, [taskToEdit, selectedDate, categories, isOpen]);
+
+  // Keyboard shortcut listener for Esc and Ctrl/Cmd+Enter
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+      } else if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        const submitBtn = document.getElementById('task-modal-submit-btn');
+        if (submitBtn) submitBtn.click();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
+  // Real-time planned duration computation
+  const plannedDuration = useMemo(() => {
+    if (!startDateTime || !endDateTime) return null;
+    const s = new Date(startDateTime);
+    const e = new Date(endDateTime);
+    const diffMs = e.getTime() - s.getTime();
+    if (isNaN(diffMs)) return null;
+    if (diffMs <= 0) {
+      return { isInvalid: true, text: 'End time must be after start time' };
+    }
+    const totalMinutes = Math.round(diffMs / 60000);
+    const hours = Math.floor(totalMinutes / 60);
+    const mins = totalMinutes % 60;
+    if (hours > 0 && mins > 0) {
+      return { isInvalid: false, text: `${hours} hr ${mins} min duration` };
+    }
+    if (hours > 0) {
+      return { isInvalid: false, text: `${hours} hr duration` };
+    }
+    return { isInvalid: false, text: `${mins} min duration` };
+  }, [startDateTime, endDateTime]);
 
   if (!isOpen) return null;
 
@@ -114,9 +161,17 @@ const TaskModal = ({
 
       setParseFeedback({
         type: hasIssues ? 'warning' : 'success',
-        title: hasIssues ? 'Draft Populated with Clarifications' : 'Task Draft Ready!',
+        title: hasIssues ? 'Draft Populated with Clarifications' : 'Task Draft Generated Successfully!',
         questions: questions,
         missing: missing,
+        extracted: {
+          title: res.title,
+          date: res.date,
+          startTime: res.startTime,
+          endTime: res.endTime,
+          duration: res.durationMinutes ? `${res.durationMinutes}m` : null,
+          category: res.categoryName
+        },
         confidence: res.confidenceScore != null ? Math.round(res.confidenceScore * 100) : null
       });
     } catch (err) {
@@ -180,34 +235,66 @@ const TaskModal = ({
     });
   };
 
+  const currentCategory = categories.find((c) => String(c.id) === String(categoryId));
+
   return (
-    <div className="modal-backdrop">
-      <div className="modal-card glass-panel task-modal-card">
-        <div className="modal-header">
-          <h3>{taskToEdit ? 'Edit Task' : 'Create New Task'}</h3>
-          <button onClick={onClose} className="btn-icon text-muted">
-            <X className="w-5 h-5" />
-          </button>
+    <div className="modal-backdrop task-studio-backdrop">
+      <div className="modal-card task-studio-card glass-panel" role="dialog" aria-modal="true">
+        {/* Modal Header */}
+        <div className="task-studio-header">
+          <div className="header-left">
+            <div className="task-studio-icon-glow">
+              {taskToEdit ? <Clock className="w-5 h-5 text-indigo-400" /> : <Sparkles className="w-5 h-5 text-pink-400" />}
+            </div>
+            <div>
+              <h3 className="task-studio-title">{taskToEdit ? 'Edit Task Schedule' : 'Create New Task'}</h3>
+              <p className="task-studio-subtitle">
+                {taskToEdit ? 'Modify timings, actual execution, or category details' : 'Describe in plain English or configure details manually'}
+              </p>
+            </div>
+          </div>
+
+          <div className="header-right">
+            <span className="kbd-shortcut-pill" title="Press Escape to close">
+              ESC
+            </span>
+            <button
+              onClick={onClose}
+              className="btn-icon-close"
+              aria-label="Close modal"
+              type="button"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
-        {error && <div className="error-alert">{error}</div>}
+        {error && (
+          <div className="task-studio-error-banner">
+            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
 
+        {/* ── Natural Language Quick Create (Only for New Tasks) ──────────────── */}
         {!taskToEdit && (
-          <div className="nlp-box">
-            <div className="nlp-box-header">
-              <div className="nlp-box-title">
-                <Sparkles className="w-4 h-4 text-accent-pink" />
-                <span>Natural Language Quick Create</span>
+          <div className="nl-studio-container">
+            <div className="nl-studio-header">
+              <div className="nl-studio-tag">
+                <Sparkles className="w-3.5 h-3.5 text-pink-400 animate-pulse" />
+                <span>AI Language Studio</span>
               </div>
-              <span className="nlp-box-subtitle">Describe your task in plain words & autofill</span>
+              <span className="nl-shortcut-hint">
+                Type naturally, then press <kbd className="kbd-mini">Enter ↵</kbd>
+              </span>
             </div>
 
-            <div className="nlp-input-row">
+            <div className="nl-prompt-input-wrapper">
               <textarea
                 value={nlText}
                 onChange={(e) => setNlText(e.target.value)}
-                placeholder="e.g. Study DBMS for two hours tomorrow morning"
-                className="nlp-textarea"
+                placeholder="Describe your task... e.g. 'Study DBMS for two hours tomorrow morning'"
+                className="nl-prompt-textarea"
                 rows={2}
                 disabled={isParsing}
                 onKeyDown={(e) => {
@@ -217,54 +304,88 @@ const TaskModal = ({
                   }
                 }}
               />
+
               <button
                 type="button"
                 onClick={handleNLPParse}
                 disabled={isParsing || !nlText.trim()}
-                className="btn btn-nlp"
-                title="Parse task description with AI"
+                className="btn-nl-magic"
+                title="Autofill task fields with AI"
               >
                 {isParsing ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <Loader2 className="w-4 h-4 animate-spin text-white" />
                 ) : (
-                  <Wand2 className="w-4 h-4" />
+                  <Wand2 className="w-4 h-4 text-white" />
                 )}
-                <span>{isParsing ? 'Parsing...' : 'Autofill'}</span>
+                <span>{isParsing ? 'Extracting...' : 'Magic Autofill'}</span>
               </button>
             </div>
 
-            <div className="nlp-examples">
-              <span className="nlp-examples-label">Try quick example:</span>
-              <div className="nlp-chips-scroll">
+            {/* Quick Inspiration Prompts */}
+            <div className="nl-prompts-carousel">
+              <span className="nl-prompts-label">Quick test prompts:</span>
+              <div className="nl-prompts-scroll">
                 {SAMPLE_PROMPTS.map((prompt, idx) => (
                   <button
                     key={idx}
                     type="button"
-                    className="nlp-chip"
-                    onClick={() => {
-                      setNlText(prompt);
-                    }}
+                    className="nl-prompt-pill"
+                    onClick={() => setNlText(prompt)}
                   >
-                    "{prompt}"
+                    <ArrowRight className="w-3 h-3 text-pink-400 opacity-60 mr-1" />
+                    <span>"{prompt}"</span>
                   </button>
                 ))}
               </div>
             </div>
 
+            {/* AI Parsing Feedback / Extraction Chips */}
             {parseFeedback && (
-              <div className={`nlp-feedback-banner nlp-feedback-${parseFeedback.type}`}>
-                <div className="nlp-feedback-header">
-                  {parseFeedback.type === 'success' && <CheckCircle2 className="w-4 h-4 text-emerald-500" />}
-                  {parseFeedback.type === 'warning' && <AlertCircle className="w-4 h-4 text-amber-500" />}
-                  {parseFeedback.type === 'error' && <Info className="w-4 h-4 text-rose-500" />}
-                  <span className="nlp-feedback-title">{parseFeedback.title}</span>
+              <div className={`nl-feedback-card nl-feedback-${parseFeedback.type}`}>
+                <div className="nl-feedback-top">
+                  <div className="flex items-center gap-2">
+                    {parseFeedback.type === 'success' && <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
+                    {parseFeedback.type === 'warning' && <AlertCircle className="w-4 h-4 text-amber-400" />}
+                    {parseFeedback.type === 'error' && <Info className="w-4 h-4 text-rose-400" />}
+                    <span className="nl-feedback-headline">{parseFeedback.title}</span>
+                  </div>
                   {parseFeedback.confidence != null && (
-                    <span className="nlp-confidence-tag">{parseFeedback.confidence}% confidence</span>
+                    <span className="nl-confidence-badge">{parseFeedback.confidence}% Confidence</span>
                   )}
                 </div>
 
+                {parseFeedback.extracted && parseFeedback.type !== 'error' && (
+                  <div className="nl-tokens-row">
+                    {parseFeedback.extracted.date && (
+                      <span className="nl-token-chip">
+                        <Calendar className="w-3 h-3 mr-1 text-sky-400" />
+                        {parseFeedback.extracted.date}
+                      </span>
+                    )}
+                    {parseFeedback.extracted.startTime && (
+                      <span className="nl-token-chip">
+                        <Clock className="w-3 h-3 mr-1 text-emerald-400" />
+                        {parseFeedback.extracted.startTime}
+                        {parseFeedback.extracted.endTime && ` → ${parseFeedback.extracted.endTime}`}
+                      </span>
+                    )}
+                    {parseFeedback.extracted.duration && (
+                      <span className="nl-token-chip">
+                        <Hourglass className="w-3 h-3 mr-1 text-purple-400" />
+                        {parseFeedback.extracted.duration}
+                      </span>
+                    )}
+                    {parseFeedback.extracted.category && (
+                      <span className="nl-token-chip">
+                        <Tag className="w-3 h-3 mr-1 text-pink-400" />
+                        {parseFeedback.extracted.category}
+                      </span>
+                    )}
+                  </div>
+                )}
+
                 {parseFeedback.questions && parseFeedback.questions.length > 0 && (
-                  <ul className="nlp-feedback-list">
+                  <ul className="nl-feedback-questions">
                     {parseFeedback.questions.map((q, idx) => (
                       <li key={idx}>{q}</li>
                     ))}
@@ -275,27 +396,50 @@ const TaskModal = ({
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="modal-form">
-
-          <div className="form-group">
-            <label>Task Title</label>
-            <input
-              type="text"
-              placeholder="e.g. Study Data Structures"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="form-input"
-              required
-            />
+        {/* ── Main Structured Task Form ──────────────────────────────────────── */}
+        <form onSubmit={handleSubmit} className="task-studio-form">
+          <div className="task-studio-section-label">
+            <Layers className="w-3.5 h-3.5 text-indigo-400" />
+            <span>Task Configuration</span>
           </div>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label>Category</label>
+          {/* Task Title */}
+          <div className="form-group">
+            <label className="field-label">
+              <span>Task Title</span>
+              <span className="required-star">*</span>
+            </label>
+            <div className="studio-input-wrap">
+              <input
+                type="text"
+                placeholder="e.g. Study Data Structures"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className="studio-input"
+                required
+              />
+            </div>
+          </div>
+
+          {/* Category & Status Row */}
+          <div className="form-row-dual">
+            {/* Category Selector with visual preview */}
+            <div className="form-group flex-1">
+              <div className="flex items-center justify-between mb-1">
+                <label className="field-label">
+                  <span>Category</span>
+                  <span className="required-star">*</span>
+                </label>
+                {currentCategory && (
+                  <span className="cat-color-indicator" style={{ backgroundColor: currentCategory.color }}>
+                    {currentCategory.name}
+                  </span>
+                )}
+              </div>
               <select
                 value={categoryId}
                 onChange={(e) => setCategoryId(e.target.value)}
-                className="form-select"
+                className="studio-select"
                 required
               >
                 {categories.map((cat) => (
@@ -306,12 +450,15 @@ const TaskModal = ({
               </select>
             </div>
 
-            <div className="form-group">
-              <label>Status</label>
+            {/* Status Selector */}
+            <div className="form-group flex-1">
+              <label className="field-label">
+                <span>Task Status</span>
+              </label>
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
-                className="form-select"
+                className="studio-select"
               >
                 <option value="PLANNED">Planned</option>
                 <option value="IN_PROGRESS">In Progress</option>
@@ -322,127 +469,172 @@ const TaskModal = ({
             </div>
           </div>
 
-          {/* Planned Time Interval */}
-          <div className="form-section-title">Planned Time</div>
-          <div className="form-row">
-            <div className="form-group">
-              <label>Start Date & Time</label>
-              <input
-                type="datetime-local"
-                value={startDateTime}
-                onChange={(e) => setStartDateTime(e.target.value)}
-                className="form-input"
-                required
-              />
+          {/* Planned Schedule Section */}
+          <div className="planned-schedule-panel">
+            <div className="schedule-panel-header">
+              <div className="flex items-center gap-1.5">
+                <Clock className="w-4 h-4 text-emerald-400" />
+                <span className="schedule-label">Planned Time Interval</span>
+              </div>
+              {plannedDuration && (
+                <span className={`duration-pill ${plannedDuration.isInvalid ? 'duration-pill--error' : 'duration-pill--valid'}`}>
+                  <Hourglass className="w-3 h-3 mr-1" />
+                  {plannedDuration.text}
+                </span>
+              )}
             </div>
 
-            <div className="form-group">
-              <label>End Date & Time</label>
-              <input
-                type="datetime-local"
-                value={endDateTime}
-                onChange={(e) => setEndDateTime(e.target.value)}
-                className="form-input"
-                required
-              />
+            <div className="form-row-dual">
+              <div className="form-group flex-1">
+                <label className="field-sublabel">Start Time</label>
+                <input
+                  type="datetime-local"
+                  value={startDateTime}
+                  onChange={(e) => setStartDateTime(e.target.value)}
+                  className="studio-input"
+                  required
+                />
+              </div>
+
+              <div className="form-group flex-1">
+                <label className="field-sublabel">End Time</label>
+                <input
+                  type="datetime-local"
+                  value={endDateTime}
+                  onChange={(e) => setEndDateTime(e.target.value)}
+                  className="studio-input"
+                  required
+                />
+              </div>
             </div>
           </div>
 
-          {/* Actual Time Tracking Section (for existing tasks) */}
+          {/* Actual Execution Tracking Section (when editing) */}
           {taskToEdit && (
-            <div className="actual-time-section">
-              <div className="actual-time-header">
-                <span className="form-section-title">Actual Execution Tracking</span>
+            <div className="actual-execution-panel">
+              <div className="actual-panel-header">
+                <div className="flex items-center gap-1.5">
+                  <Play className="w-4 h-4 text-indigo-400" />
+                  <span className="schedule-label">Actual Work Tracking</span>
+                </div>
                 {taskToEdit.isOverrunning && (
-                  <span className="badge-overrun">
+                  <span className="badge-overrun-pulsing">
                     <Flame className="w-3.5 h-3.5 mr-1" />
                     Overrunning planned time!
                   </span>
                 )}
               </div>
 
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Actual Start</label>
+              <div className="form-row-dual">
+                <div className="form-group flex-1">
+                  <label className="field-sublabel">Actual Start</label>
                   <input
                     type="datetime-local"
                     value={actualStartDateTime}
                     onChange={(e) => setActualStartDateTime(e.target.value)}
-                    className="form-input"
+                    className="studio-input"
                   />
                 </div>
 
-                <div className="form-group">
-                  <label>Actual End</label>
+                <div className="form-group flex-1">
+                  <label className="field-sublabel">Actual End</label>
                   <input
                     type="datetime-local"
                     value={actualEndDateTime}
                     onChange={(e) => setActualEndDateTime(e.target.value)}
-                    className="form-input"
+                    className="studio-input"
                   />
                 </div>
               </div>
 
-              {/* Quick Execution Action Triggers */}
-              <div className="actual-time-actions">
+              <div className="actual-quick-actions">
                 <button
                   type="button"
-                  className="btn btn-sm btn-secondary"
+                  className="btn-quick-stamp stamp-start"
                   onClick={() => handleQuickAction('START')}
                 >
-                  <Play className="w-3.5 h-3.5 mr-1 text-accent fill-current" />
-                  Stamp Start (Now)
+                  <Play className="w-3.5 h-3.5 mr-1 text-indigo-400 fill-current" />
+                  <span>Stamp Start (Now)</span>
                 </button>
                 <button
                   type="button"
-                  className="btn btn-sm btn-secondary"
+                  className="btn-quick-stamp stamp-complete"
                   onClick={() => handleQuickAction('COMPLETE')}
                 >
-                  <Check className="w-3.5 h-3.5 mr-1 text-success" />
-                  Stamp Complete (Now)
+                  <Check className="w-3.5 h-3.5 mr-1 text-emerald-400" />
+                  <span>Stamp Complete (Now)</span>
                 </button>
                 <button
                   type="button"
-                  className="btn btn-sm btn-secondary"
+                  className="btn-quick-stamp stamp-reset"
                   onClick={() => handleQuickAction('RESET')}
                   title="Reset actual time stamps"
                 >
                   <RotateCcw className="w-3.5 h-3.5 mr-1 text-muted" />
-                  Reset
+                  <span>Reset</span>
                 </button>
               </div>
             </div>
           )}
 
+          {/* Description */}
           <div className="form-group">
-            <label>Description (Optional)</label>
+            <label className="field-label">
+              <span>Description / Notes</span>
+              <span className="optional-tag">(Optional)</span>
+            </label>
             <textarea
               placeholder="Add notes, links, or task objectives..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="form-textarea"
+              className="studio-textarea"
               rows={2}
             />
           </div>
 
-          <div className="modal-actions">
-            {taskToEdit && onDelete && (
+          {/* Modal Actions */}
+          <div className="task-studio-actions">
+            {taskToEdit && onDelete ? (
               <button
                 type="button"
                 onClick={() => onDelete(taskToEdit.id)}
-                className="btn btn-danger"
+                className="btn-studio-danger"
               >
-                <Trash2 className="w-4 h-4 mr-1" />
-                <span>Delete</span>
+                <Trash2 className="w-4 h-4 mr-1.5" />
+                <span>Delete Task</span>
               </button>
+            ) : (
+              <div className="shortcut-save-hint">
+                <span>Press</span>
+                <kbd className="kbd-mini">⌘ / Ctrl + Enter</kbd>
+                <span>to save</span>
+              </div>
             )}
 
             <div className="actions-right">
-              <button type="button" onClick={onClose} className="btn btn-secondary">
+              <button
+                type="button"
+                onClick={onClose}
+                className="btn-studio-secondary"
+              >
                 Cancel
               </button>
-              <button type="submit" className="btn btn-primary">
-                {taskToEdit ? 'Save Changes' : 'Create Task'}
+              <button
+                id="task-modal-submit-btn"
+                type="submit"
+                className="btn-studio-primary"
+              >
+                {taskToEdit ? (
+                  <>
+                    <Check className="w-4 h-4 mr-1" />
+                    <span>Save Changes</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4 mr-1" />
+                    <span>Create Task</span>
+                  </>
+                )}
               </button>
             </div>
           </div>

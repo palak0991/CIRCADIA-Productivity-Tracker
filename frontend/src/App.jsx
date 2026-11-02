@@ -4,8 +4,11 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
+import CustomCursor from './components/CustomCursor';
+import BackgroundAura from './components/BackgroundAura';
 
 const ProtectedRoute = ({ children }) => {
+
   const { user, loading } = useAuth();
   if (loading) {
     return (
@@ -33,8 +36,11 @@ const PublicRoute = ({ children }) => {
 function App() {
   return (
     <AuthProvider>
+      <BackgroundAura />
+      <CustomCursor />
       <Router>
         <Routes>
+
           <Route
             path="/login"
             element={
