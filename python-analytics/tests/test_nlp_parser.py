@@ -168,3 +168,53 @@ def test_api_nlp_parse_task_endpoint():
     assert data["durationMinutes"] == 90
     assert data["categoryId"] == 1
     assert "Read research papers" in data["title"]
+
+def test_user_query_study_dbms_from_5_to_6pm():
+    # Exact user query: "study dbms from 5 to 6pm"
+    req = NLPParseRequest(
+        text="study dbms from 5 to 6pm",
+        referenceTime=REF_TIME,
+        timezone="UTC",
+        availableCategories=AVAILABLE_CATEGORIES,
+    )
+    res = parse_natural_language_task(req)
+
+    assert "Study DBMS" in res.title
+    assert res.date == "2026-10-14"  # Defaulted to today (reference time)
+    assert res.startTime == "17:00"
+    assert res.endTime == "18:00"
+    assert res.durationMinutes == 60
+    assert res.categoryId == 1  # Study category
+    assert res.startDateTime == "2026-10-14T17:00:00+00:00"
+    assert res.endDateTime == "2026-10-14T18:00:00+00:00"
+    assert len(res.missingFields) == 0
+    assert res.needsConfirmation is False
+
+def test_midnight_crossing_sleep():
+    req = NLPParseRequest(
+        text="sleep from 11pm to 7am",
+        referenceTime=REF_TIME,
+        timezone="UTC",
+    )
+    res = parse_natural_language_task(req)
+
+    assert res.startTime == "23:00"
+    assert res.endTime == "07:00"
+    assert res.durationMinutes == 480  # 8 hours
+    assert res.startDateTime == "2026-10-14T23:00:00+00:00"
+    assert res.endDateTime == "2026-10-15T07:00:00+00:00"
+
+def test_compound_duration():
+    req = NLPParseRequest(
+        text="read for 1 hour 30 mins at 4pm",
+        referenceTime=REF_TIME,
+        timezone="UTC",
+        availableCategories=AVAILABLE_CATEGORIES,
+    )
+    res = parse_natural_language_task(req)
+
+    assert res.startTime == "16:00"
+    assert res.durationMinutes == 90
+    assert res.endTime == "17:30"
+    assert res.categoryId == 1
+

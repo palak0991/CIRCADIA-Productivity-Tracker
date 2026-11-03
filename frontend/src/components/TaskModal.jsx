@@ -132,7 +132,7 @@ const TaskModal = ({
 
     try {
       const userTz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
-      const res = await parseTaskNL(nlText, userTz);
+      const res = await parseTaskNL(nlText, userTz, categories);
 
       if (res.title) {
         setTitle(res.title);
@@ -144,13 +144,25 @@ const TaskModal = ({
         setCategoryId(String(res.categoryId));
       }
 
+      const todayStr = new Date().toISOString().slice(0, 10);
+      let calculatedStart = '';
       if (res.startDateTime) {
-        setStartDateTime(formatToDateTimeLocal(res.startDateTime));
+        calculatedStart = formatToDateTimeLocal(res.startDateTime);
+        setStartDateTime(calculatedStart);
+      } else if (res.date && res.startTime) {
+        calculatedStart = `${res.date}T${res.startTime}`;
+        setStartDateTime(calculatedStart);
+      } else if (res.startTime) {
+        calculatedStart = `${todayStr}T${res.startTime}`;
+        setStartDateTime(calculatedStart);
       }
+
       if (res.endDateTime) {
         setEndDateTime(formatToDateTimeLocal(res.endDateTime));
-      } else if (res.durationMinutes && res.startDateTime) {
-        const sDate = new Date(res.startDateTime);
+      } else if (res.date && res.endTime) {
+        setEndDateTime(`${res.date}T${res.endTime}`);
+      } else if (res.durationMinutes && calculatedStart) {
+        const sDate = new Date(calculatedStart);
         const eDate = new Date(sDate.getTime() + res.durationMinutes * 60000);
         setEndDateTime(formatToDateTimeLocal(eDate.toISOString()));
       }
