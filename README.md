@@ -4,6 +4,7 @@
 > Built as a production-grade full-stack polyglot application demonstrating **Java (Spring Boot 3)**, **Python (FastAPI & spaCy NLP)**, **React 19**, **PostgreSQL**, **Docker**, and **Microservice Architecture**.
 
 [![CI — Build, Test & Docker](https://github.com/palak0991/24-hour-visualizer/actions/workflows/ci.yml/badge.svg)](https://github.com/palak0991/24-hour-visualizer/actions/workflows/ci.yml)
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/palak0991/CIRCADIA-Productivity-Tracker)
 ![Tests](https://img.shields.io/badge/tests-47%20passed-brightgreen)
 ![Tech Stack](https://img.shields.io/badge/tech%20stack-Spring%20Boot%20%7C%20FastAPI%20%7C%20React%20%7C%20PostgreSQL-blue)
 ![License](https://img.shields.io/badge/license-MIT-purple)
