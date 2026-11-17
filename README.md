@@ -11,6 +11,9 @@
 ---
 
 ## ✨ Key Features
+<img width="1918" height="847" alt="image" src="https://github.com/user-attachments/assets/ded6c9b6-6b11-4685-b90d-d0d049ed8958" />
+<img width="1907" height="857" alt="image" src="https://github.com/user-attachments/assets/6b46746e-ae03-45a6-a79f-6445da6f3bd3" />
+
 
 | Feature | Description |
 |---|---|
