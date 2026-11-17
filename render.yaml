@@ -13,16 +13,13 @@ services:
   - type: web
     name: circadia-backend
     env: docker
-    dockerfilePath: ./backend/Dockerfile
+    rootDir: backend
+    dockerfilePath: Dockerfile
     healthCheckPath: /api/health
     plan: free
     envVars:
       - key: SPRING_PROFILES_ACTIVE
         value: prod
-      - key: DB_URL
-        fromDatabase:
-          name: circadia-db
-          property: connectionString
       - key: DB_HOST
         fromDatabase:
           name: circadia-db
@@ -43,6 +40,10 @@ services:
         fromDatabase:
           name: circadia-db
           property: password
+      - key: DB_URL
+        fromDatabase:
+          name: circadia-db
+          property: connectionString
       - key: JWT_SECRET
         generateValue: true
       - key: PYTHON_ANALYTICS_URL
@@ -50,6 +51,10 @@ services:
           type: web
           name: circadia-python-analytics
           property: host
+      - key: FRONTEND_URL
+        value: https://circadia-frontend.onrender.com
+      - key: ALLOWED_ORIGINS
+        value: https://circadia-frontend.onrender.com,http://localhost:5173
 
   # ── 3. React Frontend ───────────────────────────────────────────────────
   - type: web
@@ -63,16 +68,10 @@ services:
         source: /*
         destination: /index.html
     envVars:
-      - key: VITE_API_BASE_URL
-        fromService:
-          type: web
-          name: circadia-backend
-          property: host
       - key: VITE_API_URL
-        fromService:
-          type: web
-          name: circadia-backend
-          property: host
+        value: https://circadia-backend.onrender.com/api
+      - key: VITE_API_BASE_URL
+        value: https://circadia-backend.onrender.com/api
 
 databases:
   # ── Managed PostgreSQL Database ─────────────────────────────────────────
