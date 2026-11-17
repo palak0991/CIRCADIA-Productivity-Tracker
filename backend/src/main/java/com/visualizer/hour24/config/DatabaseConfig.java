@@ -1,67 +1,94 @@
 package com.visualizer.hour24.config;
 
-import jakarta.annotation.PostConstruct;
+import com.zaxxer.hikari.HikariDataSource;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 
+import javax.sql.DataSource;
 import java.net.URI;
 
 @Configuration
 @Slf4j
 public class DatabaseConfig {
 
-    private final DataSourceProperties properties;
+    @Bean
+    @Primary
+    public DataSource dataSource(
+            @Value("${spring.datasource.url:${DB_URL:}}") String rawUrl,
+            @Value("${spring.datasource.username:${DB_USERNAME:}}") String defaultUsername,
+            @Value("${spring.datasource.password:${DB_PASSWORD:}}") String defaultPassword,
+            @Value("${DB_HOST:}") String dbHost,
+            @Value("${DB_PORT:5432}") String dbPort,
+            @Value("${POSTGRES_DB:visualizer24}") String postgresDb) {
 
-    public DatabaseConfig(DataSourceProperties properties) {
-        this.properties = properties;
-    }
+        String jdbcUrl;
+        String username = defaultUsername;
+        String password = defaultPassword;
 
-    @PostConstruct
-    public void normalizeDataSourceProperties() {
-        String url = properties.getUrl();
-        if (url == null || url.isBlank()) {
-            return;
-        }
+        if (rawUrl != null && !rawUrl.isBlank()) {
+            rawUrl = rawUrl.trim();
+            if (rawUrl.startsWith("postgres://") || rawUrl.startsWith("postgresql://")) {
+                try {
+                    String parseable = rawUrl.replaceFirst("^postgres(ql)?://", "http://");
+                    URI uri = new URI(parseable);
+                    String host = uri.getHost();
+                    int port = uri.getPort() > 0 ? uri.getPort() : 5432;
+                    String path = uri.getPath();
+                    String query = uri.getQuery();
 
-        url = url.trim();
-
-        // Handle Render postgres:// or postgresql:// connection strings
-        if (url.startsWith("postgres://") || url.startsWith("postgresql://")) {
-            try {
-                // Replace scheme with http:// so java.net.URI can parse user, host, port, path
-                String parseable = url.replaceFirst("^postgres(ql)?://", "http://");
-                URI uri = new URI(parseable);
-
-                String host = uri.getHost();
-                int port = uri.getPort() > 0 ? uri.getPort() : 5432;
-                String path = uri.getPath(); // e.g. "/visualizer24"
-                String query = uri.getQuery();
-
-                String jdbcUrl = "jdbc:postgresql://" + host + ":" + port + (path != null ? path : "");
-                if (query != null && !query.isBlank()) {
-                    jdbcUrl += "?" + query;
-                }
-
-                properties.setUrl(jdbcUrl);
-                log.info("Normalized Render PostgreSQL URI into valid JDBC URL: jdbc:postgresql://{}:{}{}", host, port, path);
-
-                String userInfo = uri.getUserInfo();
-                if (userInfo != null && !userInfo.isBlank()) {
-                    String[] credentials = userInfo.split(":", 2);
-                    if (credentials.length > 0 && (properties.getUsername() == null || properties.getUsername().isBlank() || "postgres".equals(properties.getUsername()))) {
-                        properties.setUsername(credentials[0]);
+                    jdbcUrl = "jdbc:postgresql://" + host + ":" + port + (path != null ? path : "/visualizer24");
+                    if (query != null && !query.isBlank()) {
+                        jdbcUrl += "?" + query;
                     }
-                    if (credentials.length > 1 && (properties.getPassword() == null || properties.getPassword().isBlank() || "postgres".equals(properties.getPassword()))) {
-                        properties.setPassword(credentials[1]);
+
+                    String userInfo = uri.getUserInfo();
+                    if (userInfo != null && !userInfo.isBlank()) {
+                        String[] parts = userInfo.split(":", 2);
+                        if (parts.length > 0 && !parts[0].isBlank()) {
+                            username = parts[0];
+                        }
+                        if (parts.length > 1 && !parts[1].isBlank()) {
+                            password = parts[1];
+                        }
                     }
+                    log.info("Successfully converted cloud PostgreSQL URI to JDBC URL: jdbc:postgresql://{}:{}{}", host, port, path);
+                } catch (Exception e) {
+                    log.warn("Failed to parse PostgreSQL URI {}, prepending jdbc:: {}", rawUrl, e.getMessage());
+                    jdbcUrl = "jdbc:" + rawUrl;
                 }
-            } catch (Exception e) {
-                log.warn("Failed to parse PostgreSQL URI, prefixing jdbc:: {}", e.getMessage());
-                if (!url.startsWith("jdbc:")) {
-                    properties.setUrl("jdbc:" + url);
-                }
+            } else if (!rawUrl.startsWith("jdbc:")) {
+                jdbcUrl = "jdbc:" + rawUrl;
+            } else {
+                jdbcUrl = rawUrl;
             }
+        } else if (dbHost != null && !dbHost.isBlank()) {
+            jdbcUrl = "jdbc:postgresql://" + dbHost + ":" + dbPort + "/" + postgresDb;
+        } else {
+            jdbcUrl = "jdbc:h2:mem:visualizer24;DB_CLOSE_DELAY=-1;MODE=PostgreSQL";
+            username = "sa";
+            password = "";
         }
+
+        HikariDataSource ds = new HikariDataSource();
+        ds.setJdbcUrl(jdbcUrl);
+        if (username != null && !username.isBlank()) {
+            ds.setUsername(username);
+        }
+        if (password != null && !password.isBlank()) {
+            ds.setPassword(password);
+        }
+        ds.setDriverClassName(jdbcUrl.startsWith("jdbc:postgresql:") ? "org.postgresql.Driver" : "org.h2.Driver");
+
+        // Pool sizing optimized for Render free tier
+        ds.setMaximumPoolSize(5);
+        ds.setMinimumIdle(1);
+        ds.setIdleTimeout(30000);
+        ds.setConnectionTimeout(20000);
+        ds.setMaxLifetime(1800000);
+
+        return ds;
     }
 }
