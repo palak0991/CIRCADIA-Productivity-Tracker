@@ -2,18 +2,21 @@
 FROM maven:3.9.6-eclipse-temurin-17-alpine AS build
 WORKDIR /app
 
-# Copy pom.xml and source code
-COPY pom.xml .
-COPY src ./src
+# Configure Maven JVM memory to prevent OOM on cloud build containers
+ENV MAVEN_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -Djava.awt.headless=true"
+
+# Copy pom.xml and source code from backend directory (build context: repository root)
+COPY backend/pom.xml ./pom.xml
+COPY backend/src ./src
 
 # Build production fat jar skipping tests
 RUN mvn clean package -DskipTests -B
 
-# Stage 2: Runtime image using lightweight Temurin JRE 17
+# Stage 2: Runtime image using lightweight Eclipse Temurin JRE 17
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 
-# Run as non-root user for security
+# Run as non-root user for container security
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 USER appuser
 

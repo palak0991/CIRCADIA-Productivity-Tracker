@@ -13,8 +13,7 @@ services:
   - type: web
     name: circadia-backend
     env: docker
-    rootDir: backend
-    dockerfilePath: Dockerfile
+    dockerfilePath: backend/Dockerfile
     healthCheckPath: /api/health
     plan: free
     envVars:
