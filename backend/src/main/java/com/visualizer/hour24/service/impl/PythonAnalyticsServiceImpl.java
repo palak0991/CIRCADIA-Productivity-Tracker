@@ -40,14 +40,18 @@ public class PythonAnalyticsServiceImpl implements PythonAnalyticsService {
             @Value("${app.analytics.timeout-ms:6000}") int timeoutMs) {
         this.taskRepository = taskRepository;
         this.categoryRepository = categoryRepository;
-        this.pythonServiceUrl = pythonServiceUrl;
+        String resolvedUrl = (pythonServiceUrl != null && !pythonServiceUrl.isBlank()) ? pythonServiceUrl.trim() : "http://localhost:8000";
+        if (!resolvedUrl.startsWith("http://") && !resolvedUrl.startsWith("https://")) {
+            resolvedUrl = "https://" + resolvedUrl;
+        }
+        this.pythonServiceUrl = resolvedUrl;
 
         SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
         requestFactory.setConnectTimeout(timeoutMs);
         requestFactory.setReadTimeout(timeoutMs);
 
         this.restClient = RestClient.builder()
-                .baseUrl(pythonServiceUrl)
+                .baseUrl(this.pythonServiceUrl)
                 .requestFactory(requestFactory)
                 .build();
     }

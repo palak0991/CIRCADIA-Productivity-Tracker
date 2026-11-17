@@ -23,6 +23,26 @@ services:
         fromDatabase:
           name: circadia-db
           property: connectionString
+      - key: DB_HOST
+        fromDatabase:
+          name: circadia-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: circadia-db
+          property: port
+      - key: POSTGRES_DB
+        fromDatabase:
+          name: circadia-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: circadia-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: circadia-db
+          property: password
       - key: JWT_SECRET
         generateValue: true
       - key: PYTHON_ANALYTICS_URL
@@ -43,6 +63,11 @@ services:
         source: /*
         destination: /index.html
     envVars:
+      - key: VITE_API_BASE_URL
+        fromService:
+          type: web
+          name: circadia-backend
+          property: host
       - key: VITE_API_URL
         fromService:
           type: web
@@ -54,4 +79,4 @@ databases:
   - name: circadia-db
     plan: free
     databaseName: visualizer24
-    user: circadia_user
+    user: postgres
